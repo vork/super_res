@@ -12,7 +12,7 @@ using namespace std;
 
 class GradientUtils {
     //TODO howto store the psf
-    void GradientBackProjection(Mat curEstimation, Mat orgEstimation, float normFactor);
+    void GradientBackProjection(Mat curEstimation, Mat orgEstimation, Mat normFactor, CvMat psf);
     void GradientRegulization(Mat curEstimation, int spatialWidth, int spatialHeight, float alpha);
 };
 
