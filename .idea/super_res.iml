@@ -2,12 +2,14 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/MedianEstimation.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ImageLoader.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/main.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GradientUtils.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MedianEstimation.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MedianEstimation.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ImageLoader.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/OpticalFlow.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GradientUtils.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ImageLoader.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/OpticalFlow.h" isTestSource="false" />
     </content>

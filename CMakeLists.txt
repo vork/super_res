@@ -3,7 +3,7 @@ project(super_res)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.cpp MedianEstimation.cpp MedianEstimation.h OpticalFlow.cpp OpticalFlow.h ImageLoader.cpp ImageLoader.h)
+set(SOURCE_FILES main.cpp MedianEstimation.cpp MedianEstimation.h OpticalFlow.cpp OpticalFlow.h ImageLoader.cpp ImageLoader.h GradientUtils.cpp GradientUtils.h)
 
 add_executable(super_res ${SOURCE_FILES})
 
