@@ -4,7 +4,11 @@
 
 #include <iostream>
 #include "ImageLoader.h"
-#include "opencv2/highgui/highgui.hpp"
+#include <sstream>
+#include "opencv2/highgui.hpp"
+#include <opencv2/imgcodecs.hpp>
+
+using namespace std;
 
 void ImageLoader::loadImages(string path, string filename, string ext, int totalImages, vector<Mat> &lowResImg) {
     lowResImg.resize(totalImages);
@@ -13,7 +17,7 @@ void ImageLoader::loadImages(string path, string filename, string ext, int total
         stringStream << path << filename << "_" << i << ext;
         Mat img = imread(stringStream.str());
         if(img.empty()) {
-            cerr << stringstream.str() << " can't be loaded!" << endl;
+            cerr << stringStream.str() << " can't be loaded!" << endl;
             continue;
         }
 

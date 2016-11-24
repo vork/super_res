@@ -6,6 +6,8 @@
 #define SUPER_RES_OPTICALFLOW_H
 
 #include "opencv2/core.hpp"
+#include "opencv2/optflow.hpp"
+#include "opencv2/video/tracking.hpp"
 
 using namespace cv;
 using namespace std;
