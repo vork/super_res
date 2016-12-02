@@ -17,7 +17,7 @@ set(SOURCE_FILES
         ImageLoader.cpp
         ImageLoader.h
         GradientUtils.cpp
-        GradientUtils.h)
+        GradientUtils.h Parameters.h ImageSet.h SimpleImageSet.cpp SimpleImageSet.h SuperResolution.cpp SuperResolution.h util.h)
 
 add_executable(super_res ${SOURCE_FILES})
 

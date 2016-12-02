@@ -1,0 +1,44 @@
+//
+// Created by Paul Sanzenbacher on 30.11.16
+//
+
+#ifndef SUPER_RES_IMAGESET_H
+#define SUPER_RES_IMAGESET_H
+
+#include <opencv2/core/mat.hpp>
+
+/**
+ * Abstract class representing a set of images
+ * can be implemented as a ring buffer or similar
+ */
+
+class ImageSet {
+
+protected:
+    unsigned int numImages;
+    unsigned int currentImageIndex = 0;
+
+public:
+    unsigned int getNumImages() const {
+        return numImages;
+    }
+
+    unsigned int getCurrentImageIndex() const {
+        return currentImageIndex;
+    }
+
+    // retrieve next image
+    virtual cv::Mat1f next() = 0;
+
+    // check if internal state has already been manipulated
+    virtual bool isInitialState() = 0;
+
+    // reset internal image iteration
+    virtual void reset() = 0;
+
+    // create a copy with initial state (internal counter is 0)
+    virtual ImageSet * cloneAndReset() = 0;
+};
+
+
+#endif //SUPER_RES_IMAGESET_H

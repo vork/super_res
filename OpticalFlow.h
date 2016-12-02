@@ -8,13 +8,15 @@
 #include "opencv2/core.hpp"
 #include "opencv2/optflow.hpp"
 #include "opencv2/video/tracking.hpp"
+#include "ImageSet.h"
 
-using namespace cv;
-using namespace std;
 
 /// Class which executes the optical flow implementation of opencv
 class OpticalFlow {
-    void calculateOpticalFlow(vector<Mat> lowResImg, vector<Point2f> &points);
+
+public:
+    std::vector<cv::Point2f> computeOffsetsForImageSet(ImageSet * imageSet);
+
 };
 
 
