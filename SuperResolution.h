@@ -7,6 +7,7 @@
 
 #include "Parameters.h"
 #include "ImageSet.h"
+#include "Timer.h"
 
 /**
  * Wrapper class for the superresolution algorithm
@@ -20,10 +21,30 @@ protected:
     ImageSet * imageSet;
     std::vector<cv::Point2f> offsets;
 
+    cv::Size lrSize;
+    cv::Size hrSize;
+
+    // sqrtContributions corresponds to matrix A in fast gradient back project (see Farsiu 04 paper)
+    cv::Mat1f sqrtContributions;
+
+    // current high resolution image
+    cv::Mat1f hrImage;
+
+    cv::Mat1f gradientBackProject();
+    cv::Mat1f gradientRegulization();
+
+    // create timer for runtime analysis
+    Timer timer;
+
 
 public:
     SuperResolution(Parameters *parameters, ImageSet *imageSet);
+
+    // compute super-resolution image
     cv::Mat1f compute();
+
+    // compute super-resolution when initial solution and sqrtContributions are known
+    cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f initialSolution, cv::Mat1f squaredContributions);
 };
 
 

@@ -16,8 +16,7 @@ set(SOURCE_FILES
         OpticalFlow.h
         ImageLoader.cpp
         ImageLoader.h
-        GradientUtils.cpp
-        GradientUtils.h Parameters.h ImageSet.h SimpleImageSet.cpp SimpleImageSet.h SuperResolution.cpp SuperResolution.h util.h Timer.h)
+        Parameters.h ImageSet.h SimpleImageSet.cpp SimpleImageSet.h SuperResolution.cpp SuperResolution.h util.h Timer.h PointSpreadFunction.h util.cpp)
 
 add_executable(super_res ${SOURCE_FILES})
 

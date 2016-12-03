@@ -8,6 +8,8 @@
 
 #include <opencv2/core/mat.hpp>
 #include <assert.h>
+#include "PointSpreadFunction.h"
+#include <iostream>
 
 typedef unsigned int uint;
 
@@ -16,12 +18,11 @@ class Parameters {
 protected:
     cv::Size lowResSize;       // size of the low resolution image
     uint resolutionFactor;     // resolution improvement factor
-    uint psfKernelSize;        // gaussian kernel size (must be odd)
-    float psfSigma;            // gaussian kernel sigma
+    PointSpreadFunction * pointSpreadFunction;
     float alpha;
     float beta;
     float lambda;
-    int p;
+    int p;                      // gradient regularization radius
     uint maxIterations;
 
 public:
@@ -31,8 +32,10 @@ public:
         // set default parameters
         this->lowResSize = lowResSize;
         resolutionFactor = 2;
-        psfKernelSize = 3;
-        psfSigma = 1.0f;
+
+        pointSpreadFunction = new GaussianPointSpreadFunction(3, 1.0f);
+        pointSpreadFunction->createKernel();
+
         alpha = 0.7f;
         beta = 1.0f;
         lambda = 0.04f;
@@ -40,15 +43,12 @@ public:
         maxIterations = 25;
     }
 
-    Parameters(const cv::Size &lowResSize, uint resolutionFactor, uint psfKernelSize, float psfSigma, float alpha,
+    Parameters(cv::Size lowResSize, uint resolutionFactor, PointSpreadFunction *pointSpreadFunction, float alpha,
                float beta, float lambda, int p, uint maxIterations) : lowResSize(lowResSize),
                                                                       resolutionFactor(resolutionFactor),
-                                                                      psfKernelSize(psfKernelSize), psfSigma(psfSigma),
+                                                                      pointSpreadFunction(pointSpreadFunction),
                                                                       alpha(alpha), beta(beta), lambda(lambda), p(p),
-                                                                      maxIterations(maxIterations) {
-        // enforce odd kernel size
-        assert(psfKernelSize % 2 == 1);
-    }
+                                                                      maxIterations(maxIterations) {}
 
     const cv::Size &getLowResSize() const {
         return lowResSize;
@@ -62,12 +62,8 @@ public:
         return resolutionFactor;
     }
 
-    uint getPsfKernelSize() const {
-        return psfKernelSize;
-    }
-
-    float getPsfSigma() const {
-        return psfSigma;
+    PointSpreadFunction *getPointSpreadFunction() const {
+        return pointSpreadFunction;
     }
 
     float getAlpha() const {

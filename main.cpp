@@ -12,10 +12,6 @@ using namespace cv;
 int main() {
 
 
-
-
-
-
     ImageLoader * imageLoader = new ImageLoader();
     vector<Mat> images = imageLoader->loadImages("../projects/text/");
 
@@ -34,9 +30,13 @@ int main() {
         grayFloatImages.push_back(grayFloatImage);
     }
 
+    // create simple image set (all images are stores in RAM)
     ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
 
+    // create default parameter set
     Parameters * parameters = new Parameters(images[0].size());
+
+    // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(parameters, imageSet);
     Mat1f hrImage = superResolution->compute();
 

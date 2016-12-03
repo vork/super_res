@@ -19,11 +19,18 @@ protected:
     Parameters * parameters;
     std::vector<cv::Point2f> offsets;
 
+    /* available after calling computeEstimatedSuperResolution()
+     * corresponds to matrix A in fast gradient back project (see Farsiu 04 paper) */
+    cv::Mat1f sqrtContributions;
+
 public:
 
     MedianEstimation(ImageSet *imageSet, Parameters *parameters, const std::vector<cv::Point2f> &offsets);
 
-    cv::Mat1f computeEstimatedSuperResolution();
+    // calculate median shift estimate with
+    cv::Mat1f computeEstimatedSuperResolution(cv::Mat1f &sqrtContributions);
+
+    const cv::Mat1f &getSqrtContributions() const;
 
 };
 

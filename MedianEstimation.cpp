@@ -14,7 +14,7 @@ using namespace std;
 MedianEstimation::MedianEstimation(ImageSet *imageSet, Parameters *parameters, const vector<Point2f> &offsets)
         : imageSet(imageSet), parameters(parameters), offsets(offsets) {}
 
-cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
+cv::Mat1f MedianEstimation::computeEstimatedSuperResolution(Mat1f &sqrtContributions) {
 
     Size lrSize = parameters->getLowResSize();
     Size hrSize = parameters->calcHighResSize();
@@ -30,6 +30,7 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
 
     // estimated high resolution image
     Mat1f estimate(hrSize, 0.0f);
+    sqrtContributions = Mat1f(hrSize, 0.0f);
 
     // map that indicates if a value has been found for each pixel using the median method
 //    map<Point, bool> foundImageForOffsets;
@@ -54,6 +55,8 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
             // only compute median if there exist images for this offset
             if (currentOffsetIndices.size() > 0) {
 
+                float sqrtContribution = sqrtf(currentOffsetIndices.size());
+
 //                foundImageForOffsets[Point(xOffset, yOffset)] = true;
 
                 // get subset of images with current offset
@@ -75,6 +78,7 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
                     }
 
                     float * estimatedRowPtr = estimate.ptr<float>(estimatedY);
+                    float * sqrtContributionsRowPtr = sqrtContributions.ptr<float>(estimatedY);
 
                     for (int x = 0; x < medianSubimage.cols; x++) {
                         int estimatedX = x * resolutionFactor + xOffset;
@@ -83,6 +87,7 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
                         }
 
                         estimatedRowPtr[estimatedX] = medianSubimageRowPtr[x];
+                        sqrtContributionsRowPtr[estimatedX] = sqrtContribution;
                     }
                 }
 
@@ -92,5 +97,11 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution() {
         }
     }
 
+    // TODO: fill black holes
+
     return estimate;
+}
+
+const Mat1f &MedianEstimation::getSqrtContributions() const {
+    return sqrtContributions;
 }
