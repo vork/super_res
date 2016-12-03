@@ -15,7 +15,7 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
     // store offsets for each image relative to first image ( -> first entry is zero point )
     vector<Point2f> offsets;
 
-    // make sure image set is in its inital state
+    // make sure image set is in its iniital state
     if (!imageSet->isInitialState()) {
         imageSet->reset();
     }
@@ -39,7 +39,7 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
     goodFeaturesToTrack(reference, corners, maxCorners, qualityLevel, minDistance);
 
     if (corners.size() == 0) {
-        cout << "no good feature found. maybe you have to adjust the parameters.";
+        cout << "no good features found. maybe you have to adjust the parameters." << endl;
 
         // return empty vector
         return offsets;

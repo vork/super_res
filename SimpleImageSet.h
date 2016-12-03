@@ -10,8 +10,10 @@
 #include <iostream>
 #include "ImageSet.h"
 
+
 /**
- * Simplest implementation of the interface ImageSet
+ * Simplest implementation of abstract class ImageSet
+ * stores all images in memory
  */
 
 class SimpleImageSet : public ImageSet {
@@ -31,7 +33,7 @@ public:
         numImages = images.size();
     }
 
-    cv::Mat1f next() {
+    cv::Mat1f next() override {
 
         // get current image
         cv::Mat1f currentImage = images[currentImageIndex];
@@ -42,24 +44,47 @@ public:
         return currentImage;
     }
 
-    bool isInitialState() {
+    bool isInitialState() override {
 
         // initial state equals to initial image index
         return currentImageIndex == 0;
     }
 
-    void reset() {
+    void reset() override {
 
         //  reset image index
         currentImageIndex = 0;
     }
 
-    ImageSet * cloneAndReset() {
+    ImageSet * cloneAndReset() override {
 
-        // create a simple image and initialize with same images
+        // create a simple image set and initialize with same images
         SimpleImageSet * cloned = new SimpleImageSet(this->images);
         return cloned;
     }
+
+    virtual ImageSet *createSubset(std::vector<int> indices) override {
+
+        // create a subset of images
+        std::vector<cv::Mat1f> subsetImages;
+
+        // loop over all indices
+        for (int index : indices) {
+
+            // make sure that index is valid
+            assert(index < numImages);
+
+            // add image to subset
+            subsetImages.push_back(images[index]);
+        }
+
+        // create new ImageSet object with subset images
+        ImageSet * subset = new SimpleImageSet(subsetImages);
+        return subset;
+    }
+
+    virtual cv::Mat1f computePixelwiseMedian() override;
+
 
 };
 

@@ -27,9 +27,9 @@ protected:
 public:
 
     // default constructor
-    Parameters() {
+    Parameters(cv::Size lowResSize) {
         // set default parameters
-        lowResSize = cv::Size(0, 0);
+        this->lowResSize = lowResSize;
         resolutionFactor = 2;
         psfKernelSize = 3;
         psfSigma = 1.0f;

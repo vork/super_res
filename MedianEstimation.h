@@ -17,11 +17,11 @@ class MedianEstimation {
 protected:
     ImageSet * imageSet;
     Parameters * parameters;
-    std::vector<cv::Point> discreteOffsets;
+    std::vector<cv::Point2f> offsets;
 
 public:
 
-    MedianEstimation(ImageSet *imageSet, Parameters *parameters, const std::vector<cv::Point> &discreteOffsets);
+    MedianEstimation(ImageSet *imageSet, Parameters *parameters, const std::vector<cv::Point2f> &offsets);
 
     cv::Mat1f computeEstimatedSuperResolution();
 

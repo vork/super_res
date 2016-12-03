@@ -4,14 +4,25 @@
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
 #include "OpticalFlow.h"
+#include "SuperResolution.h"
 
 using namespace std;
 using namespace cv;
 
 int main() {
 
+
+
+
+
+
     ImageLoader * imageLoader = new ImageLoader();
     vector<Mat> images = imageLoader->loadImages("../projects/text/");
+
+    if (images.size() == 0) {
+        cout << "No images found." << endl;
+        exit(-1);
+    }
 
     // convert images to Mat1f
     vector<Mat1f> grayFloatImages;
@@ -25,14 +36,9 @@ int main() {
 
     ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
 
-    OpticalFlow * opticalFlow = new OpticalFlow();
-    vector<Point2f> offsets = opticalFlow->computeOffsetsForImageSet(imageSet);
-
-    for (Point2f offset : offsets) {
-        Point roundedOffset((int)roundf(offset.x), (int)roundf(offset.y));
-//        cout << roundedOffset << endl;
-        cout << offset << endl;
-    }
+    Parameters * parameters = new Parameters(images[0].size());
+    SuperResolution * superResolution = new SuperResolution(parameters, imageSet);
+    Mat1f hrImage = superResolution->compute();
 
     return 0;
 }

@@ -18,11 +18,12 @@ class SuperResolution {
 protected:
     Parameters * parameters;
     ImageSet * imageSet;
+    std::vector<cv::Point2f> offsets;
+
 
 public:
     SuperResolution(Parameters *parameters, ImageSet *imageSet);
-    cv::Mat compute();
-
+    cv::Mat1f compute();
 };
 
 

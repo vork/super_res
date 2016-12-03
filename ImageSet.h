@@ -27,6 +27,9 @@ public:
         return currentImageIndex;
     }
 
+    // destructor
+    virtual ~ImageSet() { }
+
     // retrieve next image
     virtual cv::Mat1f next() = 0;
 
@@ -38,6 +41,13 @@ public:
 
     // create a copy with initial state (internal counter is 0)
     virtual ImageSet * cloneAndReset() = 0;
+
+    // create a subset of the image set with a list of indices (assume indices are ordered)
+    virtual ImageSet * createSubset(std::vector<int> indices) = 0;
+
+    // compute pixelwise median
+    virtual cv::Mat1f computePixelwiseMedian() = 0;
+
 };
 
 
