@@ -60,7 +60,7 @@ public:
     void setImageSet(ImageSet *imageSet) {
         Parameters::imageSet = imageSet;
         lowResSize = imageSet->getImageSize();
-        highResSize = cv::Size(lowResSize.width * 2 + 1, lowResSize.height * 2 + 1);
+        highResSize = cv::Size(lowResSize.width * resolutionFactor + 1, lowResSize.height * resolutionFactor + 1);
     }
 
     ImageSet *getImageSet() const {
