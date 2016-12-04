@@ -5,89 +5,94 @@
 #include <iostream>
 #include <map>
 #include "MedianEstimation.h"
+#include "util.h"
 
 
 using namespace cv;
 using namespace std;
 
 
-MedianEstimation::MedianEstimation(ImageSet *imageSet, Parameters *parameters, const vector<Point2f> &offsets)
-        : imageSet(imageSet), parameters(parameters), offsets(offsets) {}
+MedianEstimation::MedianEstimation(Parameters *parameters, const vector<Point2f> &offsets):
+        parameters(parameters), offsets(offsets) {}
 
 cv::Mat1f MedianEstimation::computeEstimatedSuperResolution(Mat1f &sqrtContributions) {
 
-    Size lrSize = parameters->getLowResSize();
-    Size hrSize = parameters->calcHighResSize();
+    const int padding = parameters->getPadding(); // crop to reduce black borders
+
     int resolutionFactor = parameters->getResolutionFactor();
 
-    // compute discrete offsets by rounding the offsets and scale them to the high resolution domain
-    vector<Point> discreteOffsets;
+
+    // offset of each image in low resolution space
+    vector<Point> imageOffsets;
+
+    // discrete offsets for each image in high resolution space (relative to offset in low resolution space)
+    vector<Point> subpixelOffsets;
+
     for (Point2f p : offsets) {
 
-        Point dp((int)roundf(p.x * resolutionFactor), (int)roundf(p.y * resolutionFactor));
-        discreteOffsets.push_back(dp);
+        Point d((int)roundf(p.x * resolutionFactor), (int)roundf(p.y * resolutionFactor));
+
+        Point discreteScaled;
+        discreteScaled.x = mod(d.x, resolutionFactor);
+        discreteScaled.y = mod(d.y, resolutionFactor);
+        Point imageOffset = Point((int)floorf((float)d.x / resolutionFactor), (int)floorf((float)d.y / resolutionFactor));
+
+        imageOffsets.push_back(imageOffset);
+        subpixelOffsets.push_back(discreteScaled);
     }
 
-    // estimated high resolution image
-    Mat1f estimate(hrSize, 0.0f);
-    sqrtContributions = Mat1f(hrSize, 0.0f);
+    // align all images in discrete space
+    ImageSet * croppedShiftedImageSet = parameters->getImageSet()->computeImageSetWithOffsets(imageOffsets, padding);
+    parameters->setImageSet(croppedShiftedImageSet);
 
-    // map that indicates if a value has been found for each pixel using the median method
-//    map<Point, bool> foundImageForOffsets;
+    // estimated high resolution image
+    Mat1f estimate(parameters->getHighResSize(), 0.0f);
+    sqrtContributions = Mat1f(parameters->getHighResSize(), 1.0f);
 
     // iterate over each possible displacement value
-    for (int xOffset = 1 - resolutionFactor; xOffset < resolutionFactor; xOffset++) {
-        for (int yOffset = 1 - resolutionFactor; yOffset < resolutionFactor; yOffset++) {
+    for (int xOffset = 0; xOffset < resolutionFactor; xOffset++) {
+        for (int yOffset = 0; yOffset < resolutionFactor; yOffset++) {
 
-//            foundImageForOffsets[Point(xOffset, yOffset)] = false;
 
             // calculate how often this offset is contained in the offsets vector and store corresponding image indices
             vector<int> currentOffsetIndices;
-            for (int i = 0; i < discreteOffsets.size(); i++) {
-                Point offset = discreteOffsets[i];
+            for (int i = 0; i < subpixelOffsets.size(); i++) {
+                Point offset = subpixelOffsets[i];
                 if (offset.x == xOffset && offset.y == yOffset) {
                     currentOffsetIndices.push_back(i);
                 }
             }
 
-            cout << "Images for offset " << Point(xOffset, yOffset) << ": " << currentOffsetIndices.size() << endl;
+//            cout << "Images for offset " << Point(xOffset, yOffset) << ": " << currentOffsetIndices.size() << endl;
 
             // only compute median if there exist images for this offset
             if (currentOffsetIndices.size() > 0) {
 
                 float sqrtContribution = sqrtf(currentOffsetIndices.size());
 
-//                foundImageForOffsets[Point(xOffset, yOffset)] = true;
-
                 // get subset of images with current offset
-                ImageSet * imageSubset = imageSet->createSubset(currentOffsetIndices);
+                ImageSet * imageSubset = parameters->getImageSet()->createSubset(currentOffsetIndices);
 
                 // compute pixel wise median
                 Mat1f medianSubimage = imageSubset->computePixelwiseMedian();
 
+                Size lrSize = parameters->getLowResSize();
+
                 // insert median sub image to estimated high resolution image
-                for (int y = 0; y < medianSubimage.rows; y++) {
+                for (int y = 0; y < lrSize.height; y++) {
+
+                    int hry = y * resolutionFactor + yOffset; // corresponding high resolution y
+
                     float * medianSubimageRowPtr = medianSubimage.ptr<float>(y);
+                    float * estimatedRowPtr = estimate.ptr<float>(hry + 1);
+                    float * sqrtContributionsRowPtr = sqrtContributions.ptr<float>(hry + 1);
 
-                    int estimatedY = y * resolutionFactor + yOffset;
-                    if (estimatedY < 0) {
-                        continue;
-                    }
-                    if (estimatedY >= hrSize.height) {
-                        break;
-                    }
+                    for (int x = 0; x < lrSize.width; x++) {
 
-                    float * estimatedRowPtr = estimate.ptr<float>(estimatedY);
-                    float * sqrtContributionsRowPtr = sqrtContributions.ptr<float>(estimatedY);
+                        int hrx = x * resolutionFactor + xOffset;
 
-                    for (int x = 0; x < medianSubimage.cols; x++) {
-                        int estimatedX = x * resolutionFactor + xOffset;
-                        if (estimatedX < 0 || estimatedX >= hrSize.width) {
-                            continue;
-                        }
-
-                        estimatedRowPtr[estimatedX] = medianSubimageRowPtr[x];
-                        sqrtContributionsRowPtr[estimatedX] = sqrtContribution;
+                        estimatedRowPtr[hrx + 1] = medianSubimageRowPtr[x];
+                        sqrtContributionsRowPtr[hrx + 1] = sqrtContribution;
                     }
                 }
 
@@ -100,8 +105,4 @@ cv::Mat1f MedianEstimation::computeEstimatedSuperResolution(Mat1f &sqrtContribut
     // TODO: fill black holes
 
     return estimate;
-}
-
-const Mat1f &MedianEstimation::getSqrtContributions() const {
-    return sqrtContributions;
 }

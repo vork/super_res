@@ -31,6 +31,9 @@ public:
 
         // initalize num images
         numImages = images.size();
+
+        // initalize image size
+        imageSize = images[0].size();
     }
 
     cv::Mat1f next() override {
@@ -84,6 +87,8 @@ public:
     }
 
     virtual cv::Mat1f computePixelwiseMedian() override;
+
+    virtual ImageSet * computeImageSetWithOffsets(std::vector<cv::Point> offsets, int padding) override;
 
 
 };

@@ -8,6 +8,19 @@
 using namespace std;
 using namespace cv;
 
+ImageSet * SimpleImageSet::computeImageSetWithOffsets(vector<Point> offsets, int padding) {
+    assert(numImages == offsets.size());
+
+    vector<Mat1f> offsetImages;
+
+    for (int i = 0; i < numImages; i++) {
+        Mat1f offsetImage = shiftImage(images[i], offsets[i], padding);
+        offsetImages.push_back(offsetImage);
+    }
+
+    ImageSet * offsetImageSet = new SimpleImageSet(offsetImages);
+    return offsetImageSet;
+}
 
 Mat1f SimpleImageSet::computePixelwiseMedian() {
 

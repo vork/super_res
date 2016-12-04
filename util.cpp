@@ -10,6 +10,16 @@
 using namespace std;
 using namespace cv;
 
+int mod(int a, int m) {
+
+    if (a < 0) {
+        return ((a % m) + m) % m;
+    }
+    else {
+        return a % m;
+    }
+}
+
 float signf(float val) {
 
     int intval = (int)val;
@@ -126,4 +136,25 @@ cv::Mat1f alignImages(std::vector<Mat1f> images) {
         x += image.cols ;
     }
     return aligned;
+}
+
+cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding, float fill) {
+
+    Size size(image.cols - 2 * padding, image.rows - 2 * padding);
+    assert(size.width > 0 && size.height > 0);
+
+    Mat1f shifted(image.size(), fill);
+
+    Size window(min(image.cols, (image.cols - abs(offset.x))), min(image.rows, image.rows - abs(offset.y)));
+
+    Rect rectShifted(Point(max(0, offset.x), max(0, offset.y)), window);
+    Rect rectImage(Point(max(0, -offset.x), max(0, -offset.y)), window);
+
+    image(rectImage).copyTo(shifted(rectShifted));
+
+    // TODO: more efficient implementation
+    Mat1f cropped(size);
+    shifted(Rect(Point(padding, padding), size)).copyTo(cropped);
+
+    return cropped;
 }

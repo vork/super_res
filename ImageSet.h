@@ -16,11 +16,16 @@ class ImageSet {
 
 protected:
     unsigned int numImages;
+    cv::Size imageSize;
     unsigned int currentImageIndex = 0;
 
 public:
     unsigned int getNumImages() const {
         return numImages;
+    }
+
+    const cv::Size &getImageSize() const {
+        return imageSize;
     }
 
     unsigned int getCurrentImageIndex() const {
@@ -44,6 +49,13 @@ public:
 
     // create a subset of the image set with a list of indices (assume indices are ordered)
     virtual ImageSet * createSubset(std::vector<int> indices) = 0;
+
+    /**
+     * @param offsets
+     * @param padding
+     * @return
+     */
+    virtual ImageSet * computeImageSetWithOffsets(std::vector<cv::Point> offsets, int padding) = 0;
 
     // compute pixelwise median
     virtual cv::Mat1f computePixelwiseMedian() = 0;

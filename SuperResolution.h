@@ -18,7 +18,6 @@ class SuperResolution {
 
 protected:
     Parameters * parameters;
-    ImageSet * imageSet;
     std::vector<cv::Point2f> offsets;
 
     cv::Size lrSize;
@@ -26,6 +25,9 @@ protected:
 
     // sqrtContributions corresponds to matrix A in fast gradient back project (see Farsiu 04 paper)
     cv::Mat1f sqrtContributions;
+
+    // initial estimated solution
+    cv::Mat1f initialSolution;
 
     // current high resolution image
     cv::Mat1f hrImage;
@@ -38,13 +40,13 @@ protected:
 
 
 public:
-    SuperResolution(Parameters *parameters, ImageSet *imageSet);
+    SuperResolution(Parameters *parameters);
 
     // compute super-resolution image
     cv::Mat1f compute();
 
     // compute super-resolution when initial solution and sqrtContributions are known
-    cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f initialSolution, cv::Mat1f squaredContributions);
+    cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f _initialSolution, cv::Mat1f _sqrtContributions);
 };
 
 

@@ -12,11 +12,8 @@
 using namespace cv;
 using namespace std;
 
-SuperResolution::SuperResolution(Parameters *parameters, ImageSet *imageSet) {
+SuperResolution::SuperResolution(Parameters *parameters) {
     this->parameters = parameters;
-    this->imageSet = imageSet;
-    this->lrSize = parameters->getLowResSize();
-    this->hrSize = parameters->calcHighResSize();
 }
 
 cv::Mat1f SuperResolution::gradientBackProject() {
@@ -35,13 +32,6 @@ cv::Mat1f SuperResolution::gradientBackProject() {
     Mat1f kernel = psf->getKernel();
     filter2D(hrImage, back, ddepth, kernel, anchorPoint, delta, borderType);
 
-
-//    vector<Mat1f> images({hrImage / 255, back / 255, initialSolution / 255, hrImage / 255});
-//    Mat1f vis = alignImages(images);
-//    imshow("vis", vis);
-//    waitKey(0);
-
-
     // compute difference between blurred current solution and initial solution
      back = back - initialSolution;
 
@@ -49,7 +39,7 @@ cv::Mat1f SuperResolution::gradientBackProject() {
      back = sqrtContributions.mul(back);
 
     // compute sign for each value
-    int numPixels = hrSize.width * hrSize.height;
+    int numPixels = parameters->getHighResSize().width * parameters->getHighResSize().height;
     float * backData = (float *)back.data;
     for (int i = 0; i < numPixels; i++) {
         backData[i] = signf(backData[i]);
@@ -76,7 +66,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
     const float alpha = parameters->getAlpha();
 
     // regulized matrix
-    Mat1f reg(hrSize, 0.0f);
+    Mat1f reg(parameters->getHighResSize(), 0.0f);
 
     // create mirror padded version of current solution
     Mat1f padded;
@@ -88,15 +78,15 @@ cv::Mat1f SuperResolution::gradientRegulization() {
     for (int l = -p; l <= p; l++) {
         for (int m = -p; m <= p; m++) {
 
-            Rect roi(Point(p - l, p - m), hrSize);
+            Rect roi(Point(p - l, p - m), parameters->getHighResSize());
 
             Mat1f shift = padded(roi);
 
             Mat1f diff = hrImage - shift;
 
             // compute sign
-            Mat1f sign(hrSize);
-            int numPixels = hrSize.width * hrSize.height;
+            Mat1f sign(parameters->getHighResSize());
+            int numPixels = parameters->getHighResSize().width * parameters->getHighResSize().height;
             float * signData = (float *)sign.data;
             float * diffData = (float *)diff.data;
             for (int i = 0; i < numPixels; i++) {
@@ -106,7 +96,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
             Mat1f signPadded;
             copyMakeBorder(sign, signPadded, p, p, p, p, BORDER_CONSTANT, 0.0f);
 
-            shift = signPadded(Rect(Point(p + l, p + m), hrSize));
+            shift = signPadded(Rect(Point(p + l, p + m), parameters->getHighResSize()));
 
             diff = sign - shift;
 
@@ -123,15 +113,18 @@ Mat1f SuperResolution::compute() {
     timer.reset();
 
     unique_ptr<OpticalFlow>opticalFlow(new OpticalFlow());
-    vector<Point2f> offsets = opticalFlow->computeOffsetsForImageSet(imageSet);
-    timer.printTimeAndReset("offset computation");
+    vector<Point2f> imageFlows = opticalFlow->computeOffsetsForImageSet(parameters->getImageSet());
 
-    for (Point2f offset : offsets) {
-        cout << offset << endl;
+    // compute offsets as negative image flow
+    vector<Point2f> offsets;
+    for (Point2f imageFlow : imageFlows) {
+        offsets.push_back((-1) * imageFlow);
     }
 
+    timer.printTimeAndReset("offset computation");
+
     // compute median estimation
-    unique_ptr<MedianEstimation> medianEstimation(new MedianEstimation(imageSet, parameters, offsets));
+    unique_ptr<MedianEstimation> medianEstimation(new MedianEstimation(parameters, offsets));
 
     // compute initial solution with median shift method
     hrImage = medianEstimation->computeEstimatedSuperResolution(sqrtContributions);
@@ -140,9 +133,6 @@ Mat1f SuperResolution::compute() {
     hrImage = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
 
     return hrImage;
-
-    // save estimate for debugging
-    imwrite("estimate.png", hrImage * 255);
 }
 
 Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _initialSolution, Mat1f _sqrtContributions) {
@@ -156,7 +146,7 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
 
     const float beta = parameters->getBeta();
     const float lambda = parameters->getLambda();
-    Mat1f gradient(hrSize);
+    Mat1f gradient(parameters->getHighResSize());
 
     for (unsigned int iteration = 0; iteration < parameters->getMaxIterations(); iteration++) {
 
@@ -175,8 +165,6 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
     }
 
     timer.printTimeAndReset("gradient descent");
-
-    imwrite("hr.png", hrImage);
 
     return hrImage;
 }

@@ -21,6 +21,9 @@ template <typename T> int sgn(T val) {
     return 0;
 }
 
+// euclidian modulo
+int mod(int a, int m);
+
 // convert a list of float points to discrete points by rounding the components
 std::vector<cv::Point> roundPoints(std::vector<cv::Point2f> &fpoints);
 
@@ -39,6 +42,8 @@ cv::Mat1f readMat1fFromFile(std::string filename, cv::Size size);
 void showMatrixRegion(cv::Mat1f mat, cv::Rect region);
 
 cv::Mat1f alignImages(std::vector<cv::Mat1f> images);
+
+cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding = 0, float fill = 0.0f);
 
 
 #endif SUPER_RES_UTIL_H

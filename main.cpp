@@ -15,9 +15,8 @@ using namespace cv;
 
 int main() {
 
-
     ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages("../projects/text2/");
+    vector<Mat> images = imageLoader->loadImages("../projects/text/");
 
     if (images.size() == 0) {
         cout << "No images found." << endl;
@@ -38,23 +37,14 @@ int main() {
     ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
 
     // create default parameter set
-    Parameters * parameters = new Parameters(images[0].size());
+    Parameters * parameters = new Parameters(imageSet);
 
     // run super-resolution algorithm
-    SuperResolution * superResolution = new SuperResolution(parameters, imageSet);
-
-
-    /**
-     * DEBUG
-     */
-
-//    Mat1f initial = readMat1fFromFile("../Matlab/SRes/init.bin", Size(91, 107));
-//    Mat1f contrib = readMat1fFromFile("../Matlab/SRes/contrib.bin", Size(91, 107));
-//    Mat1f hrImageD = superResolution->computeWithInitialSolutionAndSqrtContributions(initial, contrib);
-//    exit(0);
-    
-
+    SuperResolution * superResolution = new SuperResolution(parameters);
     Mat1f hrImage = superResolution->compute();
+
+    // write result
+    imwrite("hr.png", hrImage);
 
     return 0;
 }
