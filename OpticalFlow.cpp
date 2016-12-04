@@ -26,9 +26,10 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
     // set first image as reference image
     Mat1f referencef = imageSet->next();
     Mat1b reference;
-    referencef.convertTo(reference, CV_8UC1, 255);
+    referencef.convertTo(reference, CV_8UC1);
 
     // TODO: region of interest?
+
 
     // find good features in reference image
     const int maxCorners = 100;
@@ -51,7 +52,7 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
 
         Mat1f imagef = imageSet->next();
         Mat1b image;
-        imagef.convertTo(image, CV_8UC1, 255);
+        imagef.convertTo(image, CV_8UC1);
 
         vector<Point2f> nextCorners(corners.size());
 

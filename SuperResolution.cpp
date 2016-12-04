@@ -3,6 +3,7 @@
 //
 
 #include <opencv2/imgcodecs.hpp>
+#include <cv.hpp>
 #include "SuperResolution.h"
 #include "MedianEstimation.h"
 #include "OpticalFlow.h"
@@ -28,32 +29,42 @@ cv::Mat1f SuperResolution::gradientBackProject() {
 
     // blur current solution using the point spread function
     const int ddepth = -1; // use same depth for dst image
-    const Point anchorPoint = psf->getAnchorPoint(); // use center as anchor point
+    const Point anchorPoint = Point(-1, -1); // use center as anchor point
     const double delta = 0.0; // OpenCV default
     const int borderType = BORDER_REFLECT;
     Mat1f kernel = psf->getKernel();
     filter2D(hrImage, back, ddepth, kernel, anchorPoint, delta, borderType);
 
-    // compute difference between blurred current solution and current solution
-    back = back - hrImage;
+
+//    vector<Mat1f> images({hrImage / 255, back / 255, initialSolution / 255, hrImage / 255});
+//    Mat1f vis = alignImages(images);
+//    imshow("vis", vis);
+//    waitKey(0);
+
+
+    // compute difference between blurred current solution and initial solution
+     back = back - initialSolution;
 
     // weight with sqrtContributions
-    back = sqrtContributions.mul(back);
+     back = sqrtContributions.mul(back);
 
     // compute sign for each value
     int numPixels = hrSize.width * hrSize.height;
     float * backData = (float *)back.data;
     for (int i = 0; i < numPixels; i++) {
-        backData[i] = (float)sgn<float>(backData[i]);
+        backData[i] = signf(backData[i]);
     }
 
     // unblur backprojected image
     PointSpreadFunction * flippedPSF = psf->flipped();
     kernel = flippedPSF->getKernel();
-    filter2D(back, back, ddepth, kernel, anchorPoint, delta, borderType);
+
+    Mat1f unfiltered;
+    back = sqrtContributions.mul(back);
+    filter2D(back, unfiltered, ddepth, kernel, anchorPoint, delta, borderType);
     delete flippedPSF;
 
-    return back;
+    return unfiltered;
 }
 
 cv::Mat1f SuperResolution::gradientRegulization() {
@@ -77,14 +88,9 @@ cv::Mat1f SuperResolution::gradientRegulization() {
     for (int l = -p; l <= p; l++) {
         for (int m = -p; m <= p; m++) {
 
-            if (m + l < 0) {
+            Rect roi(Point(p - l, p - m), hrSize);
 
-                // fixme: hier meiner Meinung nach Widersprueche zwischen Paper und Matlab-Implementierung
-
-                continue;
-            }
-
-            Mat1f shift = padded(Rect(Point(p - l, p - m), hrSize));
+            Mat1f shift = padded(roi);
 
             Mat1f diff = hrImage - shift;
 
@@ -120,6 +126,10 @@ Mat1f SuperResolution::compute() {
     vector<Point2f> offsets = opticalFlow->computeOffsetsForImageSet(imageSet);
     timer.printTimeAndReset("offset computation");
 
+    for (Point2f offset : offsets) {
+        cout << offset << endl;
+    }
+
     // compute median estimation
     unique_ptr<MedianEstimation> medianEstimation(new MedianEstimation(imageSet, parameters, offsets));
 
@@ -135,9 +145,13 @@ Mat1f SuperResolution::compute() {
     imwrite("estimate.png", hrImage * 255);
 }
 
-Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f initialSolution, Mat1f squaredContributions) {
+Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _initialSolution, Mat1f _sqrtContributions) {
 
     timer.reset();
+
+    initialSolution = _initialSolution.clone();
+    hrImage = _initialSolution;
+    sqrtContributions = _sqrtContributions;
 
 
     const float beta = parameters->getBeta();
@@ -148,10 +162,11 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f init
 
         // gradient back projection
         Mat1f backProjected = gradientBackProject();
+
         Mat1f regularized = gradientRegulization();
 
         // compute gradient
-        gradient = backProjected + (lambda * regularized);
+         gradient = backProjected + (lambda * regularized);
 
         // subtract gradient
         hrImage = hrImage - (beta * gradient);
@@ -161,7 +176,7 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f init
 
     timer.printTimeAndReset("gradient descent");
 
-    imwrite("hr.png", hrImage * 255);
+    imwrite("hr.png", hrImage);
 
     return hrImage;
 }

@@ -5,15 +5,19 @@
 #include "SimpleImageSet.h"
 #include "OpticalFlow.h"
 #include "SuperResolution.h"
+#include "util.h"
 
 using namespace std;
 using namespace cv;
+
+
+
 
 int main() {
 
 
     ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages("../projects/text/");
+    vector<Mat> images = imageLoader->loadImages("../projects/text2/");
 
     if (images.size() == 0) {
         cout << "No images found." << endl;
@@ -26,7 +30,7 @@ int main() {
         Mat1b grayImage;
         cvtColor(image, grayImage, CV_BGR2GRAY);
         Mat1f grayFloatImage;
-        grayImage.convertTo(grayFloatImage, CV_32FC1, 1.0f / 255.0f);
+        grayImage.convertTo(grayFloatImage, CV_32FC1);
         grayFloatImages.push_back(grayFloatImage);
     }
 
@@ -38,6 +42,18 @@ int main() {
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(parameters, imageSet);
+
+
+    /**
+     * DEBUG
+     */
+
+//    Mat1f initial = readMat1fFromFile("../Matlab/SRes/init.bin", Size(91, 107));
+//    Mat1f contrib = readMat1fFromFile("../Matlab/SRes/contrib.bin", Size(91, 107));
+//    Mat1f hrImageD = superResolution->computeWithInitialSolutionAndSqrtContributions(initial, contrib);
+//    exit(0);
+    
+
     Mat1f hrImage = superResolution->compute();
 
     return 0;

@@ -40,7 +40,7 @@ public:
         beta = 1.0f;
         lambda = 0.04f;
         p = 2;
-        maxIterations = 25;
+        maxIterations = 20;
     }
 
     Parameters(cv::Size lowResSize, uint resolutionFactor, PointSpreadFunction *pointSpreadFunction, float alpha,
@@ -55,7 +55,7 @@ public:
     }
 
     cv::Size calcHighResSize() {
-        return cv::Size(lowResSize.width * resolutionFactor, lowResSize.height * resolutionFactor);
+        return cv::Size(lowResSize.width * resolutionFactor + 1, lowResSize.height * resolutionFactor + 1);
     }
 
     uint getResolutionFactor() const {

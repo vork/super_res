@@ -5,11 +5,20 @@
 #ifndef SUPER_RES_UTIL_H
 #define SUPER_RES_UTIL_H
 
-#include <opencv2/core/types.hpp>
+#include <opencv2/core/core.hpp>
 
 // sign function
+
+float signf(float val);
+
 template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
+    if (val > T(0)) {
+        return 1;
+    }
+    else if (val < T(0)) {
+        return -1;
+    }
+    return 0;
 }
 
 // convert a list of float points to discrete points by rounding the components
@@ -23,6 +32,13 @@ float medianOfFloatArray(float * a, unsigned int n);
 
 // power function with natural exponent (square and multiply)
 float powern(float a, unsigned int n);
+
+
+cv::Mat1f readMat1fFromFile(std::string filename, cv::Size size);
+
+void showMatrixRegion(cv::Mat1f mat, cv::Rect region);
+
+cv::Mat1f alignImages(std::vector<cv::Mat1f> images);
 
 
 #endif SUPER_RES_UTIL_H

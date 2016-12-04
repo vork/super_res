@@ -4,9 +4,24 @@
 
 
 #include "util.h"
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 using namespace cv;
+
+float signf(float val) {
+
+    int intval = (int)val;
+
+    if (intval > 0) {
+        return 1;
+    }
+    else if (intval < 0) {
+        return -1;
+    }
+    return 0;
+}
 
 vector<Point> roundPoints(vector<Point2f> &fpoints) {
     vector<Point> roundedPoints;
@@ -69,4 +84,46 @@ float powern(float a, unsigned int n) {
     else {
         return a * powern(a, n - 1);
     }
+}
+
+Mat1f readMat1fFromFile(string filename, Size size) {
+    Mat1f m(size);
+
+    ifstream file(filename);
+    if (file.is_open()) {
+//        float f;
+//        while (file.read((char *)&f, sizeof(float))) {
+//            cout << f << endl;
+//        }
+        file.read((char *)m.data, sizeof(float) * size.width * size.height);
+    }
+    else {
+        cout << "file '" << filename << "' could not be opened" << endl;
+    }
+
+    return m;
+
+}
+
+void showMatrixRegion(Mat1f mat, Rect region) {
+    Mat1b matb(region.size());
+    Mat1f matRegion = mat(region);
+    matRegion.convertTo(matb, CV_8UC1);
+    cout << matb << endl;
+}
+
+cv::Mat1f alignImages(std::vector<Mat1f> images) {
+    Size size(0, 0);
+    for (Mat1f image : images) {
+        size.width += image.cols;
+        size.height = max(size.height, image.rows);
+    }
+    Mat1f aligned(size, 0.0f);
+    int x = 0;
+    for (Mat1f image : images) {
+        Mat1f region = aligned(Rect(Point(x, 0), image.size()));
+        image.copyTo(region);
+        x += image.cols ;
+    }
+    return aligned;
 }
