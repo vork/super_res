@@ -10,13 +10,10 @@
 using namespace std;
 using namespace cv;
 
-
-
-
 int main() {
 
     ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages("../projects/text/");
+    vector<Mat> images = imageLoader->loadImages("images/");
 
     if (images.size() == 0) {
         cout << "No images found." << endl;
