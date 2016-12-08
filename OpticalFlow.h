@@ -14,6 +14,9 @@
 /// Class which executes the optical flow implementation of opencv
 class OpticalFlow {
 
+protected:
+    std::vector<cv::Point2f> filterOffsets(std::vector<cv::Point2f> offsets, bool * success);
+
 public:
     std::vector<cv::Point2f> computeOffsetsForImageSet(ImageSet * imageSet);
 

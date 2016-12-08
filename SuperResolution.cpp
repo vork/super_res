@@ -162,6 +162,7 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
         hrImage = hrImage - (beta * gradient);
 
         timer.setMarker();
+        cout << "iteration " << iteration << " done." << endl;
     }
 
     timer.printTimeAndReset("gradient descent");
