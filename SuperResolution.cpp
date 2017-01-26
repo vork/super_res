@@ -74,6 +74,9 @@ cv::Mat1f SuperResolution::gradientRegulization() {
 
     Mat1f shifted;
 
+
+    printf("p: %i\n", p);
+
     // iterate over window
     for (int l = -p; l <= p; l++) {
         for (int m = -p; m <= p; m++) {
@@ -86,7 +89,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
 
             // compute sign
             Mat1f sign(parameters->getHighResSize());
-            int numPixels = parameters->getHighResSize().width * parameters->getHighResSize().height;
+            const int numPixels = parameters->getHighResSize().width * parameters->getHighResSize().height;
             float * signData = (float *)sign.data;
             float * diffData = (float *)diff.data;
             for (int i = 0; i < numPixels; i++) {
@@ -100,7 +103,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
 
             diff = sign - shift;
 
-            float factor = powern(alpha, abs(l) + abs(m));
+            const float factor = powern(alpha, abs(l) + abs(m));
 
             reg = reg + factor * diff;
         }
@@ -130,6 +133,9 @@ Mat1f SuperResolution::compute() {
     hrImage = medianEstimation->computeEstimatedSuperResolution(sqrtContributions);
     timer.printTimeAndReset("median estimation");
 
+    // DEBUG: write median estimation image
+    imwrite("median.png", hrImage);
+
     hrImage = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
 
     return hrImage;
@@ -148,18 +154,24 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
     const float lambda = parameters->getLambda();
     Mat1f gradient(parameters->getHighResSize());
 
+    Timer iterationTimer;
+
     for (unsigned int iteration = 0; iteration < parameters->getMaxIterations(); iteration++) {
 
         // gradient back projection
         Mat1f backProjected = gradientBackProject();
+        iterationTimer.printTimeAndReset("gradient back project");
 
         Mat1f regularized = gradientRegulization();
+        iterationTimer.printTimeAndReset("regulization");
 
         // compute gradient
          gradient = backProjected + (lambda * regularized);
 
         // subtract gradient
         hrImage = hrImage - (beta * gradient);
+
+        iterationTimer.printTimeAndReset("rest");
 
         timer.setMarker();
         cout << "iteration " << iteration << " done." << endl;

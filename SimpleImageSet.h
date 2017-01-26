@@ -90,6 +90,8 @@ public:
 
     virtual ImageSet * computeImageSetWithOffsets(std::vector<cv::Point> offsets, int padding) override;
 
+    virtual ImageSet * computeImageSetForRegion(cv::Rect region) override;
+
 
 };
 

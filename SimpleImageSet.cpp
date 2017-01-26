@@ -56,3 +56,17 @@ Mat1f SimpleImageSet::computePixelwiseMedian() {
 
     return medianImage;
 }
+
+ImageSet * SimpleImageSet::computeImageSetForRegion(Rect region) {
+
+    vector<Mat1f> croppedImages;
+
+    for (Mat1f image : images) {
+        Mat1f cropped(region.size());
+        image(region).copyTo(cropped);
+        croppedImages.push_back(cropped);
+    }
+
+    SimpleImageSet * regionImageSet = new SimpleImageSet(croppedImages);
+    return regionImageSet;
+}

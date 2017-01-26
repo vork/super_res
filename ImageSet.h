@@ -57,6 +57,8 @@ public:
      */
     virtual ImageSet * computeImageSetWithOffsets(std::vector<cv::Point> offsets, int padding) = 0;
 
+    virtual ImageSet * computeImageSetForRegion(cv::Rect region) = 0;
+
     // compute pixelwise median
     virtual cv::Mat1f computePixelwiseMedian() = 0;
 
