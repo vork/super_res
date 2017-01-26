@@ -5,6 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 
 FIND_PACKAGE(Boost COMPONENTS system filesystem REQUIRED)
+
 find_package(OpenCV)
 
 
@@ -20,11 +21,8 @@ set(SOURCE_FILES
 
 add_executable(super_res ${SOURCE_FILES})
 
-find_package( OpenCV )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-include_directories(${DIR} /usr/local/include)
-link_directories (${DIR} /usr/local/lib)
 
 TARGET_LINK_LIBRARIES(super_res
         ${Boost_FILESYSTEM_LIBRARY}
