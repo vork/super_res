@@ -191,7 +191,7 @@ loadImageDirectory(NVGcontext *ctx, const std::string &path) {
 }
 
 #if !defined(__APPLE__)
-std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save) {
+std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &allowedFiletypes, bool save) {
 #define FILE_DIALOG_MAX_BUFFER 1024
 #if defined(_WIN32)
     OPENFILENAME ofn;
@@ -205,25 +205,25 @@ std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &
 
     std::string filter;
 
-    if (!save && filetypes.size() > 1) {
+    if (!save && allowedFiletypes.size() > 1) {
         filter.append("Supported file types (");
-        for (size_t i = 0; i < filetypes.size(); ++i) {
+        for (size_t i = 0; i < allowedFiletypes.size(); ++i) {
             filter.append("*.");
-            filter.append(filetypes[i].first);
-            if (i + 1 < filetypes.size())
+            filter.append(allowedFiletypes[i].first);
+            if (i + 1 < allowedFiletypes.size())
                 filter.append(";");
         }
         filter.append(")");
         filter.push_back('\0');
-        for (size_t i = 0; i < filetypes.size(); ++i) {
+        for (size_t i = 0; i < allowedFiletypes.size(); ++i) {
             filter.append("*.");
-            filter.append(filetypes[i].first);
-            if (i + 1 < filetypes.size())
+            filter.append(allowedFiletypes[i].first);
+            if (i + 1 < allowedFiletypes.size())
                 filter.append(";");
         }
         filter.push_back('\0');
     }
-    for (auto pair: filetypes) {
+    for (auto pair: allowedFiletypes) {
         filter.append(pair.second);
         filter.append(" (*.");
         filter.append(pair.first);
@@ -252,7 +252,7 @@ std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &
     if (save)
         cmd += "--save ";
     cmd += "--file-filter=\"";
-    for (auto pair: filetypes)
+    for (auto pair: allowedFiletypes)
         cmd += "\"*." + pair.first +  "\" ";
     cmd += "\"";
     FILE *output = popen(cmd.c_str(), "r");

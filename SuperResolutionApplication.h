@@ -12,6 +12,7 @@
 #include <nanogui/common.h>
 #include <nanogui/glutil.h>
 #include <cv.hpp>
+#include "Parameters.h"
 
 #define SCREEN_RES Eigen::Vector2i(1024, 768)
 #define WINDOW_NAME "Super-Resolution"
@@ -19,14 +20,28 @@
 class SuperResolutionApplication : public nanogui::Screen {
 
 protected:
+
+    /* GUI variables */
+
+    // required by nanogui for drawing window contents
     nanogui::GLShader mShader;
 
-    nanogui::Window *   imageWindow;
+    // window containing resultImageView (see below)
+    nanogui::Window * resultImageWindow;
 
     // image view for displaying and analyzing the result
     nanogui::ImageView * resultImageView;
 
 
+    /* Optimization variables */
+
+    // contains all parameters used for the optimization, do only use this parameter set!
+    Parameters * optimizationParameters;
+
+
+    /* Program state variables */
+
+    // scurrent optimization is stored in this variable
     cv::Mat3b currentResultImage;
 
     // indicates whether the optimization thread is currently running
@@ -37,13 +52,13 @@ protected:
 
 public:
     SuperResolutionApplication();
+
+    // used by nanogui to update window contents
     virtual void draw(NVGcontext *ctx);
     virtual void drawContents();
 
+    // start optimization
     void runOptimization();
-
-
-
 };
 
 

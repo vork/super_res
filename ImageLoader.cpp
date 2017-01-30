@@ -50,7 +50,7 @@ vector<Mat> ImageLoader::loadImages(string directory) {
             fs::path ext = it->path().extension();
             fs::path filepath = it->path();
 
-            if (filetypes.find(ext.string()) != filetypes.end()) {
+            if (allowedFiletypes.find(ext.string()) != allowedFiletypes.end()) {
 
                 Mat img = imread(filepath.string());
                 if (img.empty()) {

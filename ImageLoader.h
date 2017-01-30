@@ -17,7 +17,7 @@ class ImageLoader {
 
 public:
 
-    const set<string> filetypes = {".png", ".jpg", ".jpeg", ".gif"};
+    const set<string> allowedFiletypes = {".png", ".jpg", ".jpeg", ".gif"};
 
     ///The filename is postfixed by _##
     void loadImages(string path, string filename, string ext, int totalImages, vector<Mat> &lowResImg);

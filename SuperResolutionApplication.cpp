@@ -23,16 +23,16 @@ using namespace cv;
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
 
-
     isOptimizing = false;
 
     // Create main window
-    Window * mainWindow = new Window(this, "Test Window");
-    mainWindow->setLayout(new GroupLayout());
+    Window * controlsWindow = new Window(this, "Controls");
+    controlsWindow->setLayout(new GroupLayout());
 
     // Create optimization Button and set callback
-    Button * optimizeButton = new Button(mainWindow, "Optimize");
+    Button * optimizeButton = new Button(controlsWindow, "Optimize");
 
+    // Start optimization on press button
     optimizeButton->setCallback([this] {
 
         if (runOptimizationInLockStep) {
@@ -49,10 +49,9 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
                 optimizationThread.detach();
             }
         }
-
-
     });
 
+    // Initialize image view with a placeholder image
     string placeholderFilename = "resources/result_placeholder.png";
     currentResultImage = imread(placeholderFilename);
     if (!currentResultImage.data) {
@@ -60,21 +59,26 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         exit(0);
     }
 
+    // Convert OpenCV image to OpenGL texture wrapper object
     Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
 
-    imageWindow = new Window(this, "Result");
-    imageWindow->setPosition(Vector2i(100, 15));
-    imageWindow->setLayout(new GroupLayout());
+    // Create image window and view and display placeholder image
+    resultImageWindow = new Window(this, "Result");
+    resultImageWindow->setPosition(Vector2i(100, 15));
+    resultImageWindow->setLayout(new GroupLayout());
+    resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
 
-    resultImageView = new ImageView(imageWindow, placeholderTexture->getTextureId());
-
+    // required by nanogui to render GUI
     performLayout();
 }
 
 void SuperResolutionApplication::runOptimization() {
 
+    // TODO: set image directory from user selection in GUI
+    string imageDirectoryPath = "images/";
+
     ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages("images/");
+    vector<Mat> images = imageLoader->loadImages(imageDirectoryPath);
 
     if (images.size() == 0) {
         cout << "No images found." << endl;
@@ -90,14 +94,14 @@ void SuperResolutionApplication::runOptimization() {
         grayFloatImages.push_back(grayFloatImage);
     }
 
-    // create simple image set (all images are stores in RAM)
+    // create simple image set (all images are stored in RAM)
     ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
 
     // create default parameter set
-    Parameters * parameters = new Parameters(imageSet);
+    optimizationParameters = new Parameters(imageSet);
 
     // run super-resolution algorithm
-    SuperResolution * superResolution = new SuperResolution(parameters);
+    SuperResolution * superResolution = new SuperResolution(optimizationParameters);
     Mat1f hrImage = superResolution->compute();
 
 
