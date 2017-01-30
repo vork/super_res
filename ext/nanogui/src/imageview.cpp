@@ -16,6 +16,7 @@
 #include <nanogui/screen.h>
 #include <nanogui/theme.h>
 #include <cmath>
+#include <iostream>
 
 NAMESPACE_BEGIN(nanogui)
 
@@ -280,6 +281,7 @@ void ImageView::performLayout(NVGcontext* ctx) {
 }
 
 void ImageView::draw(NVGcontext* ctx) {
+
     Widget::draw(ctx);
     nvgEndFrame(ctx); // Flush the NanoVG draw stack, not necessary to call nvgBeginFrame afterwards.
 
@@ -295,6 +297,30 @@ void ImageView::draw(NVGcontext* ctx) {
     Vector2f positionInScreen = absolutePosition().cast<float>();
     Vector2f positionAfterOffset = positionInScreen + mOffset;
     Vector2f imagePosition = positionAfterOffset.cwiseQuotient(screenSize);
+
+
+
+//    int width = 256, height = 256;
+//    unsigned char * data = (unsigned char*)new GLuint[((width * height)* 4 * sizeof(unsigned char))];
+//
+//    for (int i = 0; i < (int)(width * height * sizeof(unsigned char) * 4); i++) {
+//        if (i % 4 == 1) {
+//            data[i] = 255;
+//        }
+//    }
+
+    // Generate white OpenGL texture.
+//    GLuint whiteTextureID;
+//    glGenTextures(1, &whiteTextureID);
+//    glBindTexture(GL_TEXTURE_2D, whiteTextureID);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+
+
+
     glEnable(GL_SCISSOR_TEST);
     float r = screen->pixelRatio();
     glScissor(positionInScreen.x() * r, (screenSize.y() - positionInScreen.y() - size().y()) * r,
@@ -302,14 +328,17 @@ void ImageView::draw(NVGcontext* ctx) {
     mShader.bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mImageID);
+//    glBindTexture(GL_TEXTURE_2D, whiteTextureID);
     mShader.setUniform("image", 0);
     mShader.setUniform("scaleFactor", scaleFactor);
     mShader.setUniform("position", imagePosition);
     mShader.drawIndexed(GL_TRIANGLES, 0, 2);
     glDisable(GL_SCISSOR_TEST);
 
-    if (helpersVisible())
-        drawHelpers(ctx);
+    if (helpersVisible()) {
+        //        drawHelpers(ctx);
+    }
+
 }
 
 

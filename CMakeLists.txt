@@ -47,6 +47,7 @@ set(SOURCE_FILES
         util.cpp
         SuperResolutionApplication.cpp
         SuperResolutionApplication.h
+#        example.cpp
 )
 
 

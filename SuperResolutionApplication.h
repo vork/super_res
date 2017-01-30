@@ -11,6 +11,7 @@
 #include <cv.hpp>
 #include <nanogui/common.h>
 #include <nanogui/glutil.h>
+#include <nanogui/imageview.h>
 
 #define SCREEN_RES Eigen::Vector2i(1024, 768)
 #define WINDOW_NAME "Super-Resolution"
@@ -19,6 +20,14 @@ class SuperResolutionApplication : public nanogui::Screen {
 
 protected:
     nanogui::GLShader mShader;
+
+    nanogui::Window *   imageWindow;
+
+    // image view for displaying and analyzing the result
+    nanogui::ImageView * resultImageView;
+
+
+    cv::Mat3b currentResultImage;
 
     // indicates whether the optimization thread is currently running
     bool isOptimizing;

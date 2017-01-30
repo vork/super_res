@@ -6,7 +6,7 @@
 
 #include <nanogui/layout.h>
 #include <nanogui/button.h>
-#include <nanogui/imageview.h>
+
 
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
@@ -22,34 +22,43 @@ using namespace std;
 using namespace cv;
 
 
-// TODO: not working yet
-GLuint matToTexture(Mat texture_cv) {
+// TODO: move to separate file, implement destructor
+class Texture {
+protected:
+    GLuint textureId;
+    string textureName;
+public:
+    Texture(cv::Mat3b cvImage, string _textureName) : textureName(_textureName) {
 
-    glEnable(GL_TEXTURE_2D);
+        textureId = 0;
 
-    GLuint texture;
+        const int w = cvImage.cols;
+        const int h = cvImage.rows;
 
-// Create Texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture); // 2d texture (x and y size)
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        GLint internalFormat = GL_RGB8;
+        GLint format = GL_RGB;
 
-//    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
-//    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, format, GL_UNSIGNED_BYTE, cvImage.data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
 
+    ~Texture() {
+            // TODO: delete gl texture
+    };
 
-// 2d texture, level of detail 0 (normal), 3 components (red, green, blue), x size from image, y size from image,
-// border 0 (normal), rgb color data, unsigned byte data, and finally the data itself.
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, texture_cv.cols, texture_cv.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, texture_cv.data);
+    GLuint getTextureId() const {
+        return textureId;
+    }
 
-    glBindTexture(GL_TEXTURE_2D, texture); // choose the texture to use.
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    return texture;
-}
+    const string &getTextureName() const {
+        return textureName;
+    }
+};
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -66,28 +75,37 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     optimizeButton->setCallback([this] {
 
         // run optimization in separate thread
-        if (!isOptimizing) {
-            isOptimizing = true;
-            thread optimizationThread([this] {
-                this->runOptimization();
-            });
-            optimizationThread.detach();
-        }
+//        if (!isOptimizing) {
+//            isOptimizing = true;
+//            thread optimizationThread([this] {
+//                this->runOptimization();
+//            });
+//            optimizationThread.detach();
+//        }
+
+        // run optimization in lock step
+        this->runOptimization();
+
     });
 
-
-//    Mat image = imread("median.png");
-//    if (!image.data) {
-//        cout << "no data" << endl;
+//    string placeholderFilename = "resources/result_placeholder.png";
+//    currentResultImage = imread(placeholderFilename);
+//    if (!currentResultImage.data) {
+//        cout << "image '" << placeholderFilename << "' can not be found." << endl;
+//        exit(0);
 //    }
-//
-//    auto imageWindow = new Window(this, "Result");
-//    imageWindow->setPosition(Vector2i(100, 15));
-//    imageWindow->setLayout(new GroupLayout());
-//
-//    auto imageView = new ImageView(imageWindow, matToTexture(image));
+    currentResultImage = Mat3b(Size(256, 256), Vec3b(255, 0, 0));
+    Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
+
+    imageWindow = new Window(this, "Result");
+    imageWindow->setPosition(Vector2i(100, 15));
+    imageWindow->setLayout(new GroupLayout());
+
+    resultImageView = new ImageView(imageWindow, placeholderTexture->getTextureId());
 
     performLayout();
+
+    this->runOptimization();
 }
 
 void SuperResolutionApplication::runOptimization() {
@@ -119,11 +137,18 @@ void SuperResolutionApplication::runOptimization() {
     SuperResolution * superResolution = new SuperResolution(parameters);
     Mat1f hrImage = superResolution->compute();
 
-    // write result
-//    imwrite("hr.png", hrImage);
+
+    // convert result to displayable format
+    Mat1b bResult;
+    hrImage.convertTo(bResult, CV_8UC1);
+    Mat3b result;
+    cvtColor(bResult, currentResultImage, CV_GRAY2RGB);
+
+    Texture * texture = new Texture(currentResultImage, "result");
+
+    resultImageView->bindImage(texture->getTextureId());
 
     isOptimizing = false;
-
 }
 
 void SuperResolutionApplication::draw(NVGcontext *ctx) {
@@ -134,8 +159,6 @@ void SuperResolutionApplication::draw(NVGcontext *ctx) {
 
 void SuperResolutionApplication::drawContents() {
 
-
-    /* Draw the window contents using OpenGL */
-    mShader.bind();
+//    mShader.bind();
 }
 
