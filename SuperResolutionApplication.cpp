@@ -6,59 +6,19 @@
 
 #include <nanogui/layout.h>
 #include <nanogui/button.h>
-
+#include <thread>
 
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
 #include "OpticalFlow.h"
-#include "util.h"
 #include "SuperResolution.h"
-#include <thread>
-
+#include "Texture.h"
 
 
 using namespace nanogui;
 using namespace std;
 using namespace cv;
 
-
-// TODO: move to separate file, implement destructor
-class Texture {
-protected:
-    GLuint textureId;
-    string textureName;
-public:
-    Texture(cv::Mat3b cvImage, string _textureName) : textureName(_textureName) {
-
-        textureId = 0;
-
-        const int w = cvImage.cols;
-        const int h = cvImage.rows;
-
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-        GLint internalFormat = GL_RGB8;
-        GLint format = GL_RGB;
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, format, GL_UNSIGNED_BYTE, cvImage.data);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    }
-
-    ~Texture() {
-            // TODO: delete gl texture
-    };
-
-    GLuint getTextureId() const {
-        return textureId;
-    }
-
-    const string &getTextureName() const {
-        return textureName;
-    }
-};
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -88,13 +48,13 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     });
 
-//    string placeholderFilename = "resources/result_placeholder.png";
-//    currentResultImage = imread(placeholderFilename);
-//    if (!currentResultImage.data) {
-//        cout << "image '" << placeholderFilename << "' can not be found." << endl;
-//        exit(0);
-//    }
-    currentResultImage = Mat3b(Size(256, 256), Vec3b(255, 0, 0));
+    string placeholderFilename = "resources/result_placeholder.png";
+    currentResultImage = imread(placeholderFilename);
+    if (!currentResultImage.data) {
+        cout << "image '" << placeholderFilename << "' can not be found." << endl;
+        exit(0);
+    }
+
     Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
 
     imageWindow = new Window(this, "Result");
@@ -141,8 +101,7 @@ void SuperResolutionApplication::runOptimization() {
     // convert result to displayable format
     Mat1b bResult;
     hrImage.convertTo(bResult, CV_8UC1);
-    Mat3b result;
-    cvtColor(bResult, currentResultImage, CV_GRAY2RGB);
+    cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
 
     Texture * texture = new Texture(currentResultImage, "result");
 

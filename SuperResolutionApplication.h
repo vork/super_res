@@ -8,10 +8,10 @@
 #include <nanogui/screen.h>
 #include <nanogui/window.h>
 #include <string>
-#include <cv.hpp>
+#include <nanogui/imageview.h>
 #include <nanogui/common.h>
 #include <nanogui/glutil.h>
-#include <nanogui/imageview.h>
+#include <cv.hpp>
 
 #define SCREEN_RES Eigen::Vector2i(1024, 768)
 #define WINDOW_NAME "Super-Resolution"

@@ -48,7 +48,7 @@ set(SOURCE_FILES
         SuperResolutionApplication.cpp
         SuperResolutionApplication.h
 #        example.cpp
-)
+        Texture.cpp Texture.h)
 
 
 
