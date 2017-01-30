@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 
+
 using namespace std;
 using namespace cv;
 
@@ -156,5 +157,8 @@ cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding, float fill)
     Mat1f cropped(size);
     shifted(Rect(Point(padding, padding), size)).copyTo(cropped);
 
+
+
     return cropped;
 }
+

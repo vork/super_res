@@ -7,6 +7,8 @@
 
 #include <opencv2/core/core.hpp>
 
+#include <OpenGL/OpenGL.h>
+
 // sign function
 
 float signf(float val);

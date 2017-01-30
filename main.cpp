@@ -1,47 +1,39 @@
 #include <iostream>
-#include <cv.hpp>
 
-#include "ImageLoader.h"
-#include "SimpleImageSet.h"
-#include "OpticalFlow.h"
-#include "SuperResolution.h"
-#include "util.h"
+#include "SuperResolutionApplication.h"
+
+
+
 
 using namespace std;
 using namespace cv;
 
+
 int main() {
 
-    ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages("images/");
 
-    if (images.size() == 0) {
-        cout << "No images found." << endl;
-        exit(-1);
+    try {
+        nanogui::init();
+
+        /* scoped variables */ {
+            nanogui::ref<SuperResolutionApplication> app = new SuperResolutionApplication();
+            app->drawAll();
+            app->setVisible(true);
+            nanogui::mainloop();
+        }
+
+        nanogui::shutdown();
+
+
+    } catch (const std::runtime_error &e) {
+        std::string error_msg = std::string("Caught a fatal error: ") + std::string(e.what());
+#if defined(_WIN32)
+        MessageBoxA(nullptr, error_msg.c_str(), NULL, MB_ICONERROR | MB_OK);
+#else
+        std::cerr << error_msg << endl;
+#endif
+        return -1;
     }
-
-    // convert images to Mat1f
-    vector<Mat1f> grayFloatImages;
-    for (Mat image : images) {
-        Mat1b grayImage;
-        cvtColor(image, grayImage, CV_BGR2GRAY);
-        Mat1f grayFloatImage;
-        grayImage.convertTo(grayFloatImage, CV_32FC1);
-        grayFloatImages.push_back(grayFloatImage);
-    }
-
-    // create simple image set (all images are stores in RAM)
-    ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
-
-    // create default parameter set
-    Parameters * parameters = new Parameters(imageSet);
-
-    // run super-resolution algorithm
-    SuperResolution * superResolution = new SuperResolution(parameters);
-    Mat1f hrImage = superResolution->compute();
-
-    // write result
-    imwrite("hr.png", hrImage);
 
     return 0;
 }
