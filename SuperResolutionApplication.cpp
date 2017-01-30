@@ -15,10 +15,10 @@
 #include "Texture.h"
 
 
+
 using namespace nanogui;
 using namespace std;
 using namespace cv;
-
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -32,19 +32,24 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // Create optimization Button and set callback
     Button * optimizeButton = new Button(mainWindow, "Optimize");
+
     optimizeButton->setCallback([this] {
 
-        // run optimization in separate thread
-//        if (!isOptimizing) {
-//            isOptimizing = true;
-//            thread optimizationThread([this] {
-//                this->runOptimization();
-//            });
-//            optimizationThread.detach();
-//        }
+        if (runOptimizationInLockStep) {
+            this->runOptimization();
+        }
+        else {
+            // run optimization in separate thread
+            // fixme: currently not working
+            if (!isOptimizing) {
+                isOptimizing = true;
+                thread optimizationThread([this] {
+                    this->runOptimization();
+                });
+                optimizationThread.detach();
+            }
+        }
 
-        // run optimization in lock step
-        this->runOptimization();
 
     });
 
@@ -64,8 +69,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     resultImageView = new ImageView(imageWindow, placeholderTexture->getTextureId());
 
     performLayout();
-
-    this->runOptimization();
 }
 
 void SuperResolutionApplication::runOptimization() {

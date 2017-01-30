@@ -32,6 +32,9 @@ protected:
     // indicates whether the optimization thread is currently running
     bool isOptimizing;
 
+    // set true to run the optimization in lock step, otherwise a separate thread will be used (currently not working)
+    const bool runOptimizationInLockStep = true;
+
 public:
     SuperResolutionApplication();
     virtual void draw(NVGcontext *ctx);
