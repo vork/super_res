@@ -107,6 +107,34 @@ public:
         return padding;
     }
 
+    void setResolutionFactor(uint _resolutionFactor){
+        resolutionFactor = _resolutionFactor;
+    }
+
+    void setAlpha(float _alpha){
+        alpha = _alpha;
+    }
+
+    void setBeta(float _beta){
+        beta = _beta;
+    }
+
+    void setLambda(float _lambda){
+        lambda = _lambda;
+    }
+
+    void setP(int _p){
+        p = _p;
+    }
+
+    void setMaxIterations(uint _maxIterations) {
+        maxIterations = _maxIterations;
+    }
+
+    void setPadding(uint _padding){
+        padding = _padding;
+    }
+
 };
 
 #endif //SUPER_RES_PARAMETERS_H
