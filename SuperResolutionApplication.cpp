@@ -3,9 +3,15 @@
 //
 
 #include "SuperResolutionApplication.h"
+//
+//#include <nanogui/layout.h>
+//#include <nanogui/button.h>
+//#include <nanogui/label.h>
+//#include <nanogui/combobox.h>
+//TODO include nur benötigte
+#include <nanogui/nanogui.h>
 
-#include <nanogui/layout.h>
-#include <nanogui/button.h>
+
 #include <thread>
 
 #include "ImageLoader.h"
@@ -21,38 +27,123 @@ using namespace std;
 using namespace cv;
 
 
+
+
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
 
     isOptimizing = false;
 
-    // Create main window
-    Window * controlsWindow = new Window(this, "Controls");
-    controlsWindow->setLayout(new GroupLayout());
+    // ------ Create Low Resolution Image Panel ----------
+    Window * lowResImgs = new Window(this, "Low Resolution Images");
+    lowResImgs->setPosition(Vector2i(20, 20));
+    lowResImgs->setFixedSize(Vector2i(450, 300));
+    lowResImgs->setLayout(new GroupLayout());
 
+    // ------ Create Control Parameter Window ----------
+    Window * controlParams = new Window(this, "Control Parameters");
+
+    //Layout: Window for Control Parameters
+    controlParams->setPosition(Vector2i(20, 350));
+    controlParams->setFixedSize(Vector2i(450, 400));
+
+    GridLayout *layout =
+            new GridLayout(Orientation::Horizontal, 2,
+                           Alignment::Middle, 15, 5);
+    layout->setColAlignment(
+            { Alignment::Maximum, Alignment::Fill });
+    layout->setSpacing(0, 10);
+    controlParams->setLayout(layout);
+
+    /* Slider and Slider Value */{
+        new Label(controlParams, "alpha:", "sans");
+        Slider *slider = new Slider(controlParams);
+        slider->setValue(0.5f);
+        slider->setFixedWidth(80);
+
+        //TODO richtiger Wert, weitere Slider
+        new Label(controlParams, "slider value:", "sans");
+        TextBox *textBox = new TextBox(controlParams);
+        textBox->setFixedSize(Vector2i(60, 25));
+        textBox->setValue("0.5");
+        textBox->setUnits("float");
+        slider->setCallback([textBox](float value) {
+            textBox->setValue(std::to_string( (value)));
+        });
+        slider->setFinalCallback([&](float value) {
+            cout << "Final slider value: " <<  (value) << endl;
+        });
+        textBox->setFixedSize(Vector2i(60,25));
+        textBox->setFontSize(20);
+        textBox->setAlignment(TextBox::Alignment::Right);
+    }
+
+
+    /*Max Iterations Label and Box */
+    new Label(controlParams, "max iterations:", "sans");
+    auto intBoxMaxIter = new IntBox<int>(controlParams);
+    intBoxMaxIter->setEditable(true);
+    intBoxMaxIter->setFixedSize(Vector2i(80, 20));
+    intBoxMaxIter->setValue(2);
+    intBoxMaxIter->setUnits("int");
+    intBoxMaxIter->setDefaultValue("0");
+    intBoxMaxIter->setFontSize(16);
+    intBoxMaxIter->setFormat("[1-9][0-9]*");
+    intBoxMaxIter->setSpinnable(true);
+    intBoxMaxIter->setMinValue(1);
+    intBoxMaxIter->setValueIncrement(1);
+
+
+
+    /*P Label and Box */
+    new Label(controlParams, "p:", "sans");
+    auto intBoxP = new IntBox<int>(controlParams);
+    intBoxP->setEditable(true);
+    intBoxP->setFixedSize(Vector2i(80, 20));
+    intBoxP->setValue(2);
+    intBoxP->setUnits("int");
+    intBoxP->setDefaultValue("0");
+    intBoxP->setFontSize(16);
+    intBoxP->setFormat("[1-9][0-9]*");
+    intBoxP->setSpinnable(true);
+    intBoxP->setMinValue(1);
+    intBoxP->setValueIncrement(1);
+
+
+    /*Padding Label and Box */
+    new Label(controlParams, "padding:", "sans");
+    auto intBoxPad = new IntBox<int>(controlParams);
+    intBoxPad->setEditable(true);
+    intBoxPad->setFixedSize(Vector2i(80, 20));
+    intBoxPad->setValue(2);
+    intBoxPad->setUnits("int");
+    intBoxPad->setDefaultValue("0");
+    intBoxPad->setFontSize(16);
+    intBoxPad->setFormat("[1-9][0-9]*");
+    intBoxPad->setSpinnable(true);
+    intBoxPad->setMinValue(1);
+    intBoxPad->setValueIncrement(1);
+
+
+    // ------ Create Optimize Button window ----------
+    Window * controlsWindow = new Window(this, "");
+    controlsWindow->setPosition(Vector2i(500, 550));
+    controlsWindow->setFixedSize(Vector2i(500, 70));
+
+    controlsWindow->setLayout(new GroupLayout());
     // Create optimization Button and set callback
     Button * optimizeButton = new Button(controlsWindow, "Optimize");
 
-    // Start optimization on press button
-    optimizeButton->setCallback([this] {
 
-        if (runOptimizationInLockStep) {
-            this->runOptimization();
-        }
-        else {
-            // run optimization in separate thread
-            // fixme: currently not working
-            if (!isOptimizing) {
-                isOptimizing = true;
-                thread optimizationThread([this] {
-                    this->runOptimization();
-                });
-                optimizationThread.detach();
-            }
-        }
-    });
 
+    // ------ Create image window and view and display placeholder image ------
+    resultImageWindow = new Window(this, "High Resolution Image");
+    resultImageWindow->setPosition(Vector2i(500, 20));
+    resultImageWindow->setFixedSize(Vector2i(500, 500));
+    resultImageWindow->setLayout(new GroupLayout());
+
+    //TODO replace with correct result image
     // Initialize image view with a placeholder image
-    string placeholderFilename = "resources/result_placeholder.png";
+    string placeholderFilename = "hr.png";
     currentResultImage = imread(placeholderFilename);
     if (!currentResultImage.data) {
         cout << "image '" << placeholderFilename << "' can not be found." << endl;
@@ -62,17 +153,53 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // Convert OpenCV image to OpenGL texture wrapper object
     Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
 
-    // Create image window and view and display placeholder image
-    resultImageWindow = new Window(this, "Result");
-    resultImageWindow->setPosition(Vector2i(100, 15));
-    resultImageWindow->setLayout(new GroupLayout());
+    new Label(resultImageWindow, "Result Image from Optimization Process: ", "sans");
     resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
+
+
+
+    // Start optimization on press button
+    optimizeButton->setCallback([=] {
+
+        uint maxIterations = (uint) intBoxMaxIter->value();
+        int p = intBoxP->value();
+        uint padding = (uint) intBoxPad->value();
+
+
+        if (runOptimizationInLockStep) {
+            this->runOptimization(maxIterations, p, padding);
+        }
+        else {
+            // run optimization in separate thread
+            // fixme: currently not working
+            if (!isOptimizing) {
+                isOptimizing = true;
+
+
+                thread optimizationThread([=] {
+                    this->runOptimization(maxIterations, p, padding);
+                });
+                optimizationThread.detach();
+            }
+        }
+
+    });
+
+
+
+    // ------ Create help window ------
+    Window * helpWindow = new Window(this, "");
+    helpWindow->setPosition(Vector2i(900, 650));
+    helpWindow->setFixedSize(Vector2i(70, 70));
+    helpWindow->setLayout(new GroupLayout());
+    Button * helpButton = new Button(helpWindow, "?");
+
 
     // required by nanogui to render GUI
     performLayout();
 }
 
-void SuperResolutionApplication::runOptimization() {
+void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding) {
 
     // TODO: set image directory from user selection in GUI
     string imageDirectoryPath = "images/";
@@ -99,6 +226,12 @@ void SuperResolutionApplication::runOptimization() {
 
     // create default parameter set
     optimizationParameters = new Parameters(imageSet);
+
+    //TODO create parameters from user input,
+    //TODO check if input, else -> default values?
+    optimizationParameters->setMaxIterations(maxIterations);
+    optimizationParameters->setP(p);
+    optimizationParameters->setPadding(padding);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters);

@@ -58,7 +58,7 @@ public:
     virtual void drawContents();
 
     // start optimization
-    void runOptimization();
+    void runOptimization(uint maxIterations, int p, uint padding);
 };
 
 
