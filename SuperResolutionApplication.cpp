@@ -134,37 +134,12 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     Button * optimizeButton = new Button(controlsWindow, "Optimize");
 
 
-
-    // ------ Create image window and view and display placeholder image ------
-    resultImageWindow = new Window(this, "High Resolution Image");
-    resultImageWindow->setPosition(Vector2i(500, 20));
-    resultImageWindow->setFixedSize(Vector2i(500, 500));
-    resultImageWindow->setLayout(new GroupLayout());
-
-    //TODO replace with correct result image
-    // Initialize image view with a placeholder image
-    string placeholderFilename = "hr.png";
-    currentResultImage = imread(placeholderFilename);
-    if (!currentResultImage.data) {
-        cout << "image '" << placeholderFilename << "' can not be found." << endl;
-        exit(0);
-    }
-
-    // Convert OpenCV image to OpenGL texture wrapper object
-    Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
-
-    new Label(resultImageWindow, "Result Image from Optimization Process: ", "sans");
-    resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
-
-
-
     // Start optimization on press button
     optimizeButton->setCallback([=] {
 
         uint maxIterations = (uint) intBoxMaxIter->value();
         int p = intBoxP->value();
         uint padding = (uint) intBoxPad->value();
-
 
         if (runOptimizationInLockStep) {
             this->runOptimization(maxIterations, p, padding);
@@ -175,7 +150,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
             if (!isOptimizing) {
                 isOptimizing = true;
 
-
                 thread optimizationThread([=] {
                     this->runOptimization(maxIterations, p, padding);
                 });
@@ -184,6 +158,25 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         }
 
     });
+
+    // ------ Create Result Image window ----------
+    // Initialize image view with a placeholder image
+    string placeholderFilename = "images/text00.png";
+    currentResultImage = imread(placeholderFilename);
+    if (!currentResultImage.data) {
+        cout << "image '" << placeholderFilename << "' can not be found." << endl;
+        exit(0);
+    }
+
+    // Convert OpenCV image to OpenGL texture wrapper object
+    Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
+
+    // Create image window and view and display placeholder image
+    resultImageWindow = new Window(this, "Result");
+    resultImageWindow->setPosition(Vector2i(500, 20));
+    resultImageWindow->setFixedSize(Vector2i(500, 500));
+    resultImageWindow->setLayout(new GroupLayout());
+    resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
 
 
 
