@@ -21,12 +21,9 @@
 #include "Texture.h"
 
 
-
 using namespace nanogui;
 using namespace std;
 using namespace cv;
-
-
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -54,28 +51,70 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     layout->setSpacing(0, 10);
     controlParams->setLayout(layout);
 
-    /* Slider and Slider Value */{
-        new Label(controlParams, "alpha:", "sans");
-        Slider *slider = new Slider(controlParams);
-        slider->setValue(0.5f);
-        slider->setFixedWidth(80);
 
-        //TODO richtiger Wert, weitere Slider
-        new Label(controlParams, "slider value:", "sans");
-        TextBox *textBox = new TextBox(controlParams);
-        textBox->setFixedSize(Vector2i(60, 25));
-        textBox->setValue("0.5");
-        textBox->setUnits("float");
-        slider->setCallback([textBox](float value) {
-            textBox->setValue(std::to_string( (value)));
-        });
-        slider->setFinalCallback([&](float value) {
-            cout << "Final slider value: " <<  (value) << endl;
-        });
-        textBox->setFixedSize(Vector2i(60,25));
-        textBox->setFontSize(20);
-        textBox->setAlignment(TextBox::Alignment::Right);
-    }
+    /*Resolution Factor Label and Box */
+    new Label(controlParams, "resolution factor:", "sans");
+    auto intBoxResolution = new IntBox<int>(controlParams);
+    intBoxResolution->setEditable(true);
+    intBoxResolution->setFixedSize(Vector2i(80, 20));
+    intBoxResolution->setValue(2);
+    intBoxResolution->setUnits("int");
+    intBoxResolution->setDefaultValue("2");
+    intBoxResolution->setFontSize(16);
+    intBoxResolution->setFormat("[1-9][0-9]*");
+    intBoxResolution->setSpinnable(true);
+    intBoxResolution->setMinValue(1);
+    intBoxResolution->setValueIncrement(1);
+    //TODO: Max Value setzen?
+
+
+    /* Alpha Label and Box */
+    new Label(controlParams, "alpha:", "sans");
+    auto floatBoxAlpha = new FloatBox<float>(controlParams);
+    floatBoxAlpha->setEditable(true);
+    floatBoxAlpha->setFixedSize(Vector2i(120, 20));
+    floatBoxAlpha->setValue(0.7f);
+    floatBoxAlpha->setUnits("float");
+    floatBoxAlpha->setDefaultValue("0.7");
+    floatBoxAlpha->setFontSize(16);
+    floatBoxAlpha->setFormat("[0-9].[0-9][0-9]*");
+    floatBoxAlpha->setSpinnable(true);
+    floatBoxAlpha->setMinValue(0.0f);
+    floatBoxAlpha->setValueIncrement(0.1f);
+    //TODO gibt es einen Max Value?
+
+
+
+    /* Beta Label and Box */
+    new Label(controlParams, "beta:", "sans");
+    auto floatBoxBeta = new FloatBox<float>(controlParams);
+    floatBoxBeta->setEditable(true);
+    floatBoxBeta->setFixedSize(Vector2i(120, 20));
+    floatBoxBeta->setValue(1.0f);
+    floatBoxBeta->setUnits("float");
+    floatBoxBeta->setDefaultValue("1.0");
+    floatBoxBeta->setFontSize(16);
+    floatBoxBeta->setFormat("[0-9].[0-9][0-9]*");
+    floatBoxBeta->setSpinnable(true);
+    floatBoxBeta->setMinValue(0.0f);
+    floatBoxBeta->setValueIncrement(0.1f);
+    //TODO gibt es einen Max Value?
+
+
+    /* Lambda Label and Box */
+    new Label(controlParams, "lambda:", "sans");
+    auto floatBoxLambda = new FloatBox<float>(controlParams);
+    floatBoxLambda->setEditable(true);
+    floatBoxLambda->setFixedSize(Vector2i(120, 20));
+    floatBoxLambda->setValue(0.04f);
+    floatBoxLambda->setUnits("float");
+    floatBoxLambda->setDefaultValue("0.04");
+    floatBoxLambda->setFontSize(16);
+    floatBoxLambda->setFormat("[0-9].[0-9][0-9]*");
+    floatBoxLambda->setSpinnable(true);
+    floatBoxLambda->setMinValue(0.0f);
+    floatBoxLambda->setValueIncrement(0.01f);
+    //TODO gibt es einen Max Value?
 
 
     /*Max Iterations Label and Box */
@@ -137,12 +176,16 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // Start optimization on press button
     optimizeButton->setCallback([=] {
 
+        uint resolutionFactor = (uint) intBoxResolution->value();
         uint maxIterations = (uint) intBoxMaxIter->value();
         int p = intBoxP->value();
         uint padding = (uint) intBoxPad->value();
+        float alpha = floatBoxAlpha->value();
+        float beta = floatBoxBeta->value();
+        float lambda = floatBoxLambda->value();
 
         if (runOptimizationInLockStep) {
-            this->runOptimization(maxIterations, p, padding);
+            this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
         }
         else {
             // run optimization in separate thread
@@ -151,7 +194,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
                 isOptimizing = true;
 
                 thread optimizationThread([=] {
-                    this->runOptimization(maxIterations, p, padding);
+                    this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
                 });
                 optimizationThread.detach();
             }
@@ -192,7 +235,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     performLayout();
 }
 
-void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding) {
+void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
+                                                 float lambda, uint resolutionFactor) {
 
     // TODO: set image directory from user selection in GUI
     string imageDirectoryPath = "images/";
@@ -225,6 +269,10 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     optimizationParameters->setMaxIterations(maxIterations);
     optimizationParameters->setP(p);
     optimizationParameters->setPadding(padding);
+    optimizationParameters->setAlpha(alpha);
+    optimizationParameters->setBeta(beta);
+    optimizationParameters->setLambda(lambda);
+    optimizationParameters->setResolutionFactor(resolutionFactor);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters);
