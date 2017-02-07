@@ -23,6 +23,9 @@ protected:
 
     /* GUI variables */
 
+
+    const Eigen::Vector2i screenRes = SCREEN_RES;
+
     // required by nanogui for drawing window contents
     nanogui::GLShader mShader;
 

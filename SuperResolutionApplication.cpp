@@ -28,20 +28,64 @@ using namespace cv;
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
 
+    //GUI size dependenciess
+    int screenWidth = screenRes.x();
+    int screenHeight = screenRes.y();
+
+    int marginSpace = 25;
+
+    int windowWidthLeft = 450;
+    int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft;
+
+    int windowHeightUpper = 300;
+
+    int parameterBoxHeight = 20;
+    int parameterBoxWidth = 120;
+
+    int buttonHeight = 70;
+
+    int widthPosOptimize = screenHeight-buttonHeight-marginSpace;
+
+
     isOptimizing = false;
 
     // ------ Create Low Resolution Image Panel ----------
     Window * lowResImgs = new Window(this, "Low Resolution Images");
-    lowResImgs->setPosition(Vector2i(20, 20));
-    lowResImgs->setFixedSize(Vector2i(450, 300));
+    lowResImgs->setPosition(Vector2i(marginSpace, marginSpace));
+    lowResImgs->setFixedSize(Vector2i(windowWidthLeft, windowHeightUpper));
     lowResImgs->setLayout(new GroupLayout());
+
+
+    // File Dialog TODO
+    new Label(lowResImgs, "File Dialog: ", "sans-bold");
+
+    auto directoryTextBox = new TextBox(lowResImgs);
+    directoryTextBox->setEditable(true);
+
+    Button * getDirectory = new Button(lowResImgs, "Open directory");
+    getDirectory->setCallback([&] {
+
+        string directory = directoryTextBox->value();
+        //TODO not correct yet
+
+    });
+
+    Button * b = new Button(lowResImgs, "Choose directory in file system");
+    b->setCallback([&] {
+        cout << "File dialog result: " << file_dialog(
+                { {"png", "Portable Network Graphics"}, {"txt", "Text file"} }, false) << endl;
+
+    });
+
+    //TODO loadImageDirectory() could be useful
+
+
+
 
     // ------ Create Control Parameter Window ----------
     Window * controlParams = new Window(this, "Control Parameters");
-
-    //Layout: Window for Control Parameters
-    controlParams->setPosition(Vector2i(20, 350));
-    controlParams->setFixedSize(Vector2i(450, 400));
+    controlParams->setPosition(Vector2i(marginSpace, windowHeightUpper + (2 * marginSpace)));
+    controlParams->setFixedSize(Vector2i(windowWidthLeft, screenHeight - (windowHeightUpper + (3 * marginSpace))));
 
     GridLayout *layout =
             new GridLayout(Orientation::Horizontal, 2,
@@ -56,7 +100,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "resolution factor:", "sans");
     auto intBoxResolution = new IntBox<int>(controlParams);
     intBoxResolution->setEditable(true);
-    intBoxResolution->setFixedSize(Vector2i(80, 20));
+    intBoxResolution->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxResolution->setValue(2);
     intBoxResolution->setUnits("int");
     intBoxResolution->setDefaultValue("2");
@@ -72,7 +116,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "alpha:", "sans");
     auto floatBoxAlpha = new FloatBox<float>(controlParams);
     floatBoxAlpha->setEditable(true);
-    floatBoxAlpha->setFixedSize(Vector2i(120, 20));
+    floatBoxAlpha->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxAlpha->setValue(0.7f);
     floatBoxAlpha->setUnits("float");
     floatBoxAlpha->setDefaultValue("0.7");
@@ -89,7 +133,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "beta:", "sans");
     auto floatBoxBeta = new FloatBox<float>(controlParams);
     floatBoxBeta->setEditable(true);
-    floatBoxBeta->setFixedSize(Vector2i(120, 20));
+    floatBoxBeta->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxBeta->setValue(1.0f);
     floatBoxBeta->setUnits("float");
     floatBoxBeta->setDefaultValue("1.0");
@@ -105,7 +149,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "lambda:", "sans");
     auto floatBoxLambda = new FloatBox<float>(controlParams);
     floatBoxLambda->setEditable(true);
-    floatBoxLambda->setFixedSize(Vector2i(120, 20));
+    floatBoxLambda->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxLambda->setValue(0.04f);
     floatBoxLambda->setUnits("float");
     floatBoxLambda->setDefaultValue("0.04");
@@ -121,7 +165,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "max iterations:", "sans");
     auto intBoxMaxIter = new IntBox<int>(controlParams);
     intBoxMaxIter->setEditable(true);
-    intBoxMaxIter->setFixedSize(Vector2i(80, 20));
+    intBoxMaxIter->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxMaxIter->setValue(2);
     intBoxMaxIter->setUnits("int");
     intBoxMaxIter->setDefaultValue("0");
@@ -137,7 +181,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "p:", "sans");
     auto intBoxP = new IntBox<int>(controlParams);
     intBoxP->setEditable(true);
-    intBoxP->setFixedSize(Vector2i(80, 20));
+    intBoxP->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxP->setValue(2);
     intBoxP->setUnits("int");
     intBoxP->setDefaultValue("0");
@@ -152,7 +196,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     new Label(controlParams, "padding:", "sans");
     auto intBoxPad = new IntBox<int>(controlParams);
     intBoxPad->setEditable(true);
-    intBoxPad->setFixedSize(Vector2i(80, 20));
+    intBoxPad->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxPad->setValue(2);
     intBoxPad->setUnits("int");
     intBoxPad->setDefaultValue("0");
@@ -165,8 +209,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // ------ Create Optimize Button window ----------
     Window * controlsWindow = new Window(this, "");
-    controlsWindow->setPosition(Vector2i(500, 550));
-    controlsWindow->setFixedSize(Vector2i(500, 70));
+    controlsWindow->setPosition(Vector2i(windowWidthLeft + (2 * marginSpace), widthPosOptimize));
+    controlsWindow->setFixedSize(Vector2i(windowWidthRight - buttonHeight - marginSpace - marginSpace, buttonHeight));
 
     controlsWindow->setLayout(new GroupLayout());
     // Create optimization Button and set callback
@@ -216,8 +260,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // Create image window and view and display placeholder image
     resultImageWindow = new Window(this, "Result");
-    resultImageWindow->setPosition(Vector2i(500, 20));
-    resultImageWindow->setFixedSize(Vector2i(500, 500));
+    resultImageWindow->setPosition(Vector2i(500, marginSpace));
+    resultImageWindow->setFixedSize(Vector2i(windowWidthRight, screenHeight - (4 * marginSpace) - buttonHeight));
     resultImageWindow->setLayout(new GroupLayout());
     resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
 
@@ -225,8 +269,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // ------ Create help window ------
     Window * helpWindow = new Window(this, "");
-    helpWindow->setPosition(Vector2i(900, 650));
-    helpWindow->setFixedSize(Vector2i(70, 70));
+    helpWindow->setPosition(Vector2i(920, widthPosOptimize));
+    helpWindow->setFixedSize(Vector2i(buttonHeight, buttonHeight));
     helpWindow->setLayout(new GroupLayout());
     Button * helpButton = new Button(helpWindow, "?");
 
