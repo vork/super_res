@@ -5,25 +5,20 @@
 #include "SuperResolutionApplication.h"
 //
 
-
-//#include <nanogui/layout.h>
-//#include <nanogui/button.h>
-//#include <nanogui/label.h>
-//#include <nanogui/combobox.h>
-//TODO include nur benötigte
-#include <nanogui/nanogui.h>
+#include <nanogui/layout.h>
+#include <nanogui/button.h>
+#include <nanogui/label.h>
+#include <nanogui/combobox.h>
+#include <nanogui/textbox.h>
 #include <regex>
-
 
 
 #include <thread>
 
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
-#include "OpticalFlow.h"
 #include "SuperResolution.h"
 #include "Texture.h"
-
 
 using namespace nanogui;
 using namespace std;
@@ -60,7 +55,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     lowResImgs->setLayout(new GroupLayout());
 
 
-    // File Dialog TODO
+    // File Dialog TODO loadImageDirectory() could be useful
     new Label(lowResImgs, "File Dialog: ", "sans-bold");
 
     auto directoryTextBox = new TextBox(lowResImgs);
@@ -73,9 +68,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         cout << "File dialog result: " << dirPath << endl;
 
     });
-
-    //TODO loadImageDirectory() could be useful
-
 
 
 
@@ -198,7 +190,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxP->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxP->setValue(2);
     intBoxP->setUnits("int");
-    intBoxP->setDefaultValue("0");
+    intBoxP->setDefaultValue("1");
     intBoxP->setFontSize(16);
     intBoxP->setFormat("[1-9][0-9]*");
     intBoxP->setSpinnable(true);
@@ -344,15 +336,14 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     // create default parameter set
     optimizationParameters = new Parameters(imageSet);
 
-    //TODO create parameters from user input,
-    //TODO check if input, else -> default values?
-    optimizationParameters->setMaxIterations(maxIterations);
-    optimizationParameters->setP(p);
-    optimizationParameters->setPadding(padding);
-    optimizationParameters->setAlpha(alpha);
-    optimizationParameters->setBeta(beta);
-    optimizationParameters->setLambda(lambda);
-    optimizationParameters->setResolutionFactor(resolutionFactor);
+    //Check if input is not null
+    (maxIterations == NULL) ? optimizationParameters->setMaxIterations(2) : optimizationParameters->setMaxIterations(maxIterations);
+    (p == NULL) ? optimizationParameters->setP(2) : optimizationParameters->setP(p);
+    (padding == NULL) ? optimizationParameters->setPadding(2) : optimizationParameters->setPadding(padding);
+    (alpha == NULL) ? optimizationParameters->setAlpha(0.7f) : optimizationParameters->setAlpha(alpha);
+    (beta == NULL) ? optimizationParameters->setBeta(1.0f) : optimizationParameters->setBeta(beta);
+    (lambda == NULL) ? optimizationParameters->setLambda(0.04f) : optimizationParameters->setLambda(lambda);
+    (resolutionFactor == NULL) ? optimizationParameters->setResolutionFactor(2) : optimizationParameters->setResolutionFactor(resolutionFactor);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters);
