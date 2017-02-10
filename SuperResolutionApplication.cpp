@@ -13,6 +13,8 @@
 
 
 #include <thread>
+#include <boost/filesystem/operations.hpp>
+#include <nanogui/nanogui.h>
 
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
@@ -22,6 +24,9 @@
 using namespace nanogui;
 using namespace std;
 using namespace cv;
+
+#define DIR_LABEL_PLACEHOLDER "not selected"
+
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -59,6 +64,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // File Dialog
     new Label(lowResImgs, "File Dialog: ", "sans-bold");
 
+    directoryPath = DIR_LABEL_PLACEHOLDER;
     directoryLabel = new Label(lowResImgs, directoryPath, "sans-bold");
     directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
 
@@ -297,13 +303,27 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
                                                  float lambda, uint resolutionFactor) {
 
-    if(directoryPath.empty()){
-        cout << "No image directory path found.";
+
+    bool isDirectoryValid = true;
+    string warningTitle, warningMessage;
+
+    if(directoryPath.empty() || directoryPath == DIR_LABEL_PLACEHOLDER){
+        isDirectoryValid = false;
+        warningTitle = "No directory specified";
+        warningMessage = "Please specify an image directory before optimizing.";
+
+    }
+    else if (!boost::filesystem::exists(directoryPath)) {
+        isDirectoryValid = false;
+        warningTitle = "Directory not found";
+        warningMessage = "The path '" + this->directoryPath + "' is not a valid directory.";
     }
 
-    //TODO
-//    string imageDirectoryPath = directoryPath;
-
+    // print warning message if directory is not valid and leave optimization
+    if (!isDirectoryValid) {
+        MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        return;
+    }
 
 
     ImageLoader * imageLoader = new ImageLoader();
