@@ -61,7 +61,8 @@ public:
     virtual void drawContents();
 
     // start optimization
-    void runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta, float lambda, uint resolutionFactor);
+    void runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta, float lambda,
+                         uint resolutionFactor, std::string directory);
 };
 
 

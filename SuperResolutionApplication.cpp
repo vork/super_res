@@ -10,6 +10,8 @@
 //#include <nanogui/combobox.h>
 //TODO include nur benötigte
 #include <nanogui/nanogui.h>
+#include <regex>
+
 
 
 #include <thread>
@@ -62,13 +64,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     auto directoryTextBox = new TextBox(lowResImgs);
     directoryTextBox->setEditable(true);
 
-    Button * getDirectory = new Button(lowResImgs, "Open directory");
-    getDirectory->setCallback([&] {
-
-        string directory = directoryTextBox->value();
-        //TODO not correct yet
-
-    });
 
     Button * b = new Button(lowResImgs, "Choose directory in file system");
     b->setCallback([&] {
@@ -97,7 +92,9 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /*Resolution Factor Label and Box */
-    new Label(controlParams, "resolution factor:", "sans");
+    Label * labelResolution = new Label(controlParams, "resolution factor:", "sans");
+    const string ttResolution = "Choose an integer value that is dividable by 2.";
+    labelResolution->setTooltip(ttResolution);
     auto intBoxResolution = new IntBox<int>(controlParams);
     intBoxResolution->setEditable(true);
     intBoxResolution->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -109,11 +106,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxResolution->setSpinnable(true);
     intBoxResolution->setMinValue(1);
     intBoxResolution->setValueIncrement(1);
+    intBoxResolution->setTooltip(ttResolution);
     //TODO: Max Value setzen?
 
 
     /* Alpha Label and Box */
-    new Label(controlParams, "alpha:", "sans");
+    Label * labelAlpha = new Label(controlParams, "alpha:", "sans");
+    const string ttAlpha = "Set alpha.";
+    labelAlpha->setTooltip(ttAlpha);
     auto floatBoxAlpha = new FloatBox<float>(controlParams);
     floatBoxAlpha->setEditable(true);
     floatBoxAlpha->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -125,12 +125,15 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxAlpha->setSpinnable(true);
     floatBoxAlpha->setMinValue(0.0f);
     floatBoxAlpha->setValueIncrement(0.1f);
+    floatBoxAlpha->setTooltip(ttAlpha);
     //TODO gibt es einen Max Value?
 
 
 
     /* Beta Label and Box */
-    new Label(controlParams, "beta:", "sans");
+    Label * labelBeta = new Label(controlParams, "beta:", "sans");
+    const string ttBeta = "Set beta.";
+    labelBeta->setTooltip(ttBeta);
     auto floatBoxBeta = new FloatBox<float>(controlParams);
     floatBoxBeta->setEditable(true);
     floatBoxBeta->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -142,11 +145,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxBeta->setSpinnable(true);
     floatBoxBeta->setMinValue(0.0f);
     floatBoxBeta->setValueIncrement(0.1f);
+    floatBoxBeta->setTooltip(ttBeta);
     //TODO gibt es einen Max Value?
 
 
     /* Lambda Label and Box */
-    new Label(controlParams, "lambda:", "sans");
+    Label * labelLambda = new Label(controlParams, "lambda:", "sans");
+    const string ttLambda = "Set Lambda";
+    labelLambda->setTooltip(ttLambda);
     auto floatBoxLambda = new FloatBox<float>(controlParams);
     floatBoxLambda->setEditable(true);
     floatBoxLambda->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -158,11 +164,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxLambda->setSpinnable(true);
     floatBoxLambda->setMinValue(0.0f);
     floatBoxLambda->setValueIncrement(0.01f);
+    floatBoxLambda->setTooltip(ttLambda);
     //TODO gibt es einen Max Value?
 
 
     /*Max Iterations Label and Box */
-    new Label(controlParams, "max iterations:", "sans");
+    Label * labelMaxIter = new Label(controlParams, "max iterations:", "sans");
+    const string ttMaxIter = "Choose the number of maximum iterations. An integer between 2 and 25 is recommended.";
+    labelMaxIter->setTooltip(ttMaxIter);
     auto intBoxMaxIter = new IntBox<int>(controlParams);
     intBoxMaxIter->setEditable(true);
     intBoxMaxIter->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -174,11 +183,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxMaxIter->setSpinnable(true);
     intBoxMaxIter->setMinValue(1);
     intBoxMaxIter->setValueIncrement(1);
+    intBoxMaxIter->setTooltip(ttMaxIter);
 
 
 
     /*P Label and Box */
-    new Label(controlParams, "p:", "sans");
+    Label * labelP = new Label(controlParams, "p:", "sans");
+    const string ttP = "Set p.";
+    labelP->setTooltip(ttP);
     auto intBoxP = new IntBox<int>(controlParams);
     intBoxP->setEditable(true);
     intBoxP->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -190,10 +202,13 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxP->setSpinnable(true);
     intBoxP->setMinValue(1);
     intBoxP->setValueIncrement(1);
+    intBoxP->setTooltip(ttP);
 
 
     /*Padding Label and Box */
-    new Label(controlParams, "padding:", "sans");
+    Label * labelPadding = new Label(controlParams, "padding:", "sans");
+    const string ttPadding = "Set padding.";
+    labelPadding->setTooltip(ttPadding);
     auto intBoxPad = new IntBox<int>(controlParams);
     intBoxPad->setEditable(true);
     intBoxPad->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
@@ -205,6 +220,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxPad->setSpinnable(true);
     intBoxPad->setMinValue(1);
     intBoxPad->setValueIncrement(1);
+    intBoxPad->setTooltip(ttPadding);
 
 
     // ------ Create Optimize Button window ----------
@@ -215,6 +231,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     controlsWindow->setLayout(new GroupLayout());
     // Create optimization Button and set callback
     Button * optimizeButton = new Button(controlsWindow, "Optimize");
+    optimizeButton->setTooltip("Click this button to start the optimization process. The result is shown in the window above.");
 
 
     // Start optimization on press button
@@ -228,8 +245,18 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         float beta = floatBoxBeta->value();
         float lambda = floatBoxLambda->value();
 
+        string directory = directoryTextBox->value();
+        //TODO match if directory is a valid directory
+        //regex string("^(?:[\w]\:|\\)(\\[a-z_\-\s0-9\.]+)+\.(txt|gif|pdf|doc|docx|xls|xlsx)$");
+
+//        if(regex_match(directory,string)){
+//            cout << "directory!"<< endl;
+//        }
+
+
+
         if (runOptimizationInLockStep) {
-            this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
+            this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor, directory);
         }
         else {
             // run optimization in separate thread
@@ -238,7 +265,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
                 isOptimizing = true;
 
                 thread optimizationThread([=] {
-                    this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
+                    this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor, directory);
                 });
                 optimizationThread.detach();
             }
@@ -262,6 +289,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     resultImageWindow = new Window(this, "Result");
     resultImageWindow->setPosition(Vector2i(500, marginSpace));
     resultImageWindow->setFixedSize(Vector2i(windowWidthRight, screenHeight - (4 * marginSpace) - buttonHeight));
+    resultImageWindow->setTooltip("The result image is shown in this window.");
     resultImageWindow->setLayout(new GroupLayout());
     resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
 
@@ -272,6 +300,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     helpWindow->setPosition(Vector2i(920, widthPosOptimize));
     helpWindow->setFixedSize(Vector2i(buttonHeight, buttonHeight));
     helpWindow->setLayout(new GroupLayout());
+    helpWindow->setTooltip("Click to get help.");
     Button * helpButton = new Button(helpWindow, "?");
 
 
@@ -280,10 +309,15 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 }
 
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
-                                                 float lambda, uint resolutionFactor) {
+                                                 float lambda, uint resolutionFactor, string directory) {
 
-    // TODO: set image directory from user selection in GUI
-    string imageDirectoryPath = "images/";
+    string imageDirectoryPath;
+    if(directory.empty()){
+        cout << "No image directory path found.";
+    } else{
+        imageDirectoryPath = directory;
+    }
+
 
     ImageLoader * imageLoader = new ImageLoader();
     vector<Mat> images = imageLoader->loadImages(imageDirectoryPath);
