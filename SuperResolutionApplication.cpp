@@ -3,7 +3,6 @@
 //
 
 #include "SuperResolutionApplication.h"
-//
 
 #include <nanogui/layout.h>
 #include <nanogui/button.h>
@@ -31,28 +30,26 @@ using namespace cv;
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
 
-    // TODO: kurz beschreiben wozu die ganzen variablen hier da sind
-
     //GUI size dependenciess
-    const int screenWidth = screenRes.x();
-    const int screenHeight = screenRes.y();
+    const int screenWidth = screenRes.x();  // complete window width
+    const int screenHeight = screenRes.y();  // complete window height
 
-    const int marginSpace = 25;
+    const int marginSpace = 25; //margin to the inner windows
 
-    const int windowWidthLeft = 450;
-    const int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft;
+    const int windowWidthLeft = 450; //width of the left parts of the window
+    const int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft; //width of the right parts of the window
 
-    const int windowHeightUpper = 300;
+    const int windowHeightUpper = 300; //height of the upper windows
 
-    const int parameterBoxHeight = 20;
-    const int parameterBoxWidth = 120;
+    const int parameterBoxHeight = 20; //height of the parameter boxes
+    const int parameterBoxWidth = 120; //width of the parameter boxes
 
-    const int buttonHeight = 70;
+    const int buttonHeight = 70; //height of the buttons
 
-    const int widthPosOptimize = screenHeight-buttonHeight-marginSpace;
+    const int widthPosOptimize = screenHeight-buttonHeight-marginSpace; //width for the Position of the window for the optimize Button
 
 
-    isOptimizing = false;
+    isOptimizing = false; //variable that determines if optimization process is running.
 
     // ------ Create Low Resolution Image Panel ----------
     Window * lowResImgs = new Window(this, "Low Resolution Images");
@@ -70,7 +67,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     Button * b = new Button(lowResImgs, "Choose directory in file system");
     b->setPosition(Vector2i(100, 150));
-    b->setFixedSize(Vector2i(300, 50));
+    b->setFixedSize(Vector2i(300, 35));
+    b->setTooltip("Click this button to choose the directory of the blurred images.");
     b->setCallback([this] {
         this->directoryPath = directory_dialog() + "/";
         this->directoryLabel->setCaption(directoryPath);
@@ -233,7 +231,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // Create optimization Button and set callback
     Button * optimizeButton = new Button(controlsWindow, "Optimize");
     optimizeButton->setTooltip("Click this button to start the optimization process. The result is shown in the window above.");
-
+    //TODO tooltip not fully visible
 
     // Start optimization on press button
     optimizeButton->setCallback([=] {
@@ -294,7 +292,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     helpWindow->setLayout(new GroupLayout());
     helpWindow->setTooltip("Click to get help.");
     Button * helpButton = new Button(helpWindow, "?");
-
+    //TODO window for help & tooltip not visible
 
     // required by nanogui to render GUI
     performLayout();
@@ -302,7 +300,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
                                                  float lambda, uint resolutionFactor) {
-
 
     bool isDirectoryValid = true;
     string warningTitle, warningMessage;
