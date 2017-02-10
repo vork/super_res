@@ -4,6 +4,8 @@
 
 #include "SuperResolutionApplication.h"
 //
+
+
 //#include <nanogui/layout.h>
 //#include <nanogui/button.h>
 //#include <nanogui/label.h>
@@ -67,8 +69,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     Button * b = new Button(lowResImgs, "Choose directory in file system");
     b->setCallback([&] {
-        cout << "File dialog result: " << file_dialog(
-                { {"png", "Portable Network Graphics"}, {"txt", "Text file"} }, false) << endl;
+        string dirPath = directory_dialog();
+        cout << "File dialog result: " << dirPath << endl;
 
     });
 

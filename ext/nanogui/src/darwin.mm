@@ -38,6 +38,23 @@ std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &
     return path;
 }
 
+std::string directory_dialog() {
+    std::string path = "";
+    NSOpenPanel *openDlg = [[NSOpenPanel openPanel] retain];
+
+    [openDlg setCanChooseFiles:NO];
+    [openDlg setCanChooseDirectories:YES];
+    [openDlg setAllowsMultipleSelection:NO];
+
+    if ([openDlg runModal] == NSModalResponseOK) {
+        for (NSURL* url in [openDlg URLs]) {
+            path = std::string((char*) [[url path] UTF8String]);
+            break;
+        }
+    }
+    return path;
+}
+
 void chdir_to_bundle_parent() {
     NSString *path = [[[NSBundle mainBundle] bundlePath] stringByDeletingLastPathComponent];
     chdir([path fileSystemRepresentation]);
