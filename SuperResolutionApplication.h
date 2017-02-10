@@ -11,6 +11,7 @@
 #include <nanogui/imageview.h>
 #include <nanogui/common.h>
 #include <nanogui/glutil.h>
+#include <nanogui/label.h>
 #include <cv.hpp>
 #include "Parameters.h"
 
@@ -23,10 +24,10 @@ protected:
 
     /* GUI variables */
 
-    std::string directoryPath;
-
-
     const Eigen::Vector2i screenRes = SCREEN_RES;
+
+    // label displaying the current directory path;
+    nanogui::Label * directoryLabel;
 
     // required by nanogui for drawing window contents
     nanogui::GLShader mShader;
@@ -37,7 +38,6 @@ protected:
     // image view for displaying and analyzing the result
     nanogui::ImageView * resultImageView;
 
-
     /* Optimization variables */
 
     // contains all parameters used for the optimization, do only use this parameter set!
@@ -45,6 +45,9 @@ protected:
 
 
     /* Program state variables */
+
+    // current directory path
+    std::string directoryPath;
 
     // scurrent optimization is stored in this variable
     cv::Mat3b currentResultImage;

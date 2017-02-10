@@ -7,7 +7,6 @@
 
 #include <nanogui/layout.h>
 #include <nanogui/button.h>
-#include <nanogui/label.h>
 #include <nanogui/combobox.h>
 #include <nanogui/textbox.h>
 #include <regex>
@@ -27,23 +26,25 @@ using namespace cv;
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
 
+    // TODO: kurz beschreiben wozu die ganzen variablen hier da sind
+
     //GUI size dependenciess
-    int screenWidth = screenRes.x();
-    int screenHeight = screenRes.y();
+    const int screenWidth = screenRes.x();
+    const int screenHeight = screenRes.y();
 
-    int marginSpace = 25;
+    const int marginSpace = 25;
 
-    int windowWidthLeft = 450;
-    int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft;
+    const int windowWidthLeft = 450;
+    const int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft;
 
-    int windowHeightUpper = 300;
+    const int windowHeightUpper = 300;
 
-    int parameterBoxHeight = 20;
-    int parameterBoxWidth = 120;
+    const int parameterBoxHeight = 20;
+    const int parameterBoxWidth = 120;
 
-    int buttonHeight = 70;
+    const int buttonHeight = 70;
 
-    int widthPosOptimize = screenHeight-buttonHeight-marginSpace;
+    const int widthPosOptimize = screenHeight-buttonHeight-marginSpace;
 
 
     isOptimizing = false;
@@ -58,16 +59,15 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // File Dialog
     new Label(lowResImgs, "File Dialog: ", "sans-bold");
 
+    directoryLabel = new Label(lowResImgs, directoryPath, "sans-bold");
+    directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
+
     Button * b = new Button(lowResImgs, "Choose directory in file system");
     b->setPosition(Vector2i(100, 150));
     b->setFixedSize(Vector2i(300, 50));
-    b->setCallback([=] {
-
-        directoryPath = directory_dialog() + "/";
-
-        Label * directoryLabel = new Label(lowResImgs, directoryPath, "sans-bold");
-        directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
-
+    b->setCallback([this] {
+        this->directoryPath = directory_dialog() + "/";
+        this->directoryLabel->setCaption(directoryPath);
     });
 
 
