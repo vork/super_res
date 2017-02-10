@@ -292,7 +292,13 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     helpWindow->setLayout(new GroupLayout());
     helpWindow->setTooltip("Click to get help.");
     Button * helpButton = new Button(helpWindow, "?");
-    //TODO window for help & tooltip not visible
+    //TODO tooltip not fully visible
+
+    helpButton->setCallback([&] {
+        auto dlg = new MessageDialog(this, MessageDialog::Type::Information, "Help", "Tooltips are provided for every button"
+                "and input field. These get visible if you stay longer with the mouse.");
+        dlg->setCallback([](int result) { cout << "Dialog closed result: " << result << endl; });
+    });
 
     // required by nanogui to render GUI
     performLayout();
