@@ -55,18 +55,23 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     lowResImgs->setLayout(new GroupLayout());
 
 
-    // File Dialog TODO loadImageDirectory() could be useful
+    // File Dialog
     new Label(lowResImgs, "File Dialog: ", "sans-bold");
 
-    auto directoryTextBox = new TextBox(lowResImgs);
-    directoryTextBox->setEditable(true);
+//    auto directoryTextBox = new TextBox(lowResImgs);
+//    directoryTextBox->setEditable(false);
 
+    Label * directoryLabel;
 
     Button * b = new Button(lowResImgs, "Choose directory in file system");
+    b->setPosition(Vector2i(100, 150));
+    b->setFixedSize(Vector2i(300, 50));
     b->setCallback([=] {
         string dirPath = directory_dialog() + "/";
 
-        directoryTextBox->setValue(dirPath);
+//        directoryTextBox->setValue(dirPath);
+        directoryLabel = new Label(lowResImgs, dirPath, "sans-bold");
+        directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
 
     });
 
@@ -88,7 +93,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     /*Resolution Factor Label and Box */
     Label * labelResolution = new Label(controlParams, "resolution factor:", "sans");
-    const string ttResolution = "Choose an integer value that is dividable by 2.";
+    const string ttResolution = "Choose an integer value that is a power of 2.";
     labelResolution->setTooltip(ttResolution);
     auto intBoxResolution = new IntBox<int>(controlParams);
     intBoxResolution->setEditable(true);
@@ -240,15 +245,9 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         float beta = floatBoxBeta->value();
         float lambda = floatBoxLambda->value();
 
-        string directory = directoryTextBox->value();
-        //TODO match if directory is a valid directory
-        //regex string("^(?:[\w]\:|\\)(\\[a-z_\-\s0-9\.]+)+\.(txt|gif|pdf|doc|docx|xls|xlsx)$");
-
-//        if(regex_match(directory,string)){
-//            cout << "directory!"<< endl;
-//        }
-
-
+//        string directory = directoryTextBox->value();
+        //TODO just for testing
+        string directory = directoryPath;
 
         if (runOptimizationInLockStep) {
             this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor, directory);
