@@ -63,9 +63,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     Button * b = new Button(lowResImgs, "Choose directory in file system");
-    b->setCallback([&] {
-        string dirPath = directory_dialog();
-        cout << "File dialog result: " << dirPath << endl;
+    b->setCallback([=] {
+        string dirPath = directory_dialog() + "/";
+
+        directoryTextBox->setValue(dirPath);
 
     });
 
