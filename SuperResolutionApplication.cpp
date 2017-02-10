@@ -58,19 +58,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // File Dialog
     new Label(lowResImgs, "File Dialog: ", "sans-bold");
 
-//    auto directoryTextBox = new TextBox(lowResImgs);
-//    directoryTextBox->setEditable(false);
-
-    Label * directoryLabel;
-
     Button * b = new Button(lowResImgs, "Choose directory in file system");
     b->setPosition(Vector2i(100, 150));
     b->setFixedSize(Vector2i(300, 50));
     b->setCallback([=] {
-        string dirPath = directory_dialog() + "/";
 
-//        directoryTextBox->setValue(dirPath);
-        directoryLabel = new Label(lowResImgs, dirPath, "sans-bold");
+        directoryPath = directory_dialog() + "/";
+
+        Label * directoryLabel = new Label(lowResImgs, directoryPath, "sans-bold");
         directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
 
     });
@@ -245,12 +240,9 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
         float beta = floatBoxBeta->value();
         float lambda = floatBoxLambda->value();
 
-//        string directory = directoryTextBox->value();
-        //TODO just for testing
-        string directory = directoryPath;
 
         if (runOptimizationInLockStep) {
-            this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor, directory);
+            this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
         }
         else {
             // run optimization in separate thread
@@ -259,7 +251,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
                 isOptimizing = true;
 
                 thread optimizationThread([=] {
-                    this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor, directory);
+                    this->runOptimization(maxIterations, p, padding, alpha, beta, lambda, resolutionFactor);
                 });
                 optimizationThread.detach();
             }
@@ -303,18 +295,19 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 }
 
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
-                                                 float lambda, uint resolutionFactor, string directory) {
+                                                 float lambda, uint resolutionFactor) {
 
-    string imageDirectoryPath;
-    if(directory.empty()){
+    if(directoryPath.empty()){
         cout << "No image directory path found.";
-    } else{
-        imageDirectoryPath = directory;
     }
+
+    //TODO
+//    string imageDirectoryPath = directoryPath;
+
 
 
     ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages(imageDirectoryPath);
+    vector<Mat> images = imageLoader->loadImages(directoryPath);
 
     if (images.size() == 0) {
         cout << "No images found." << endl;

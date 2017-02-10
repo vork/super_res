@@ -23,6 +23,8 @@ protected:
 
     /* GUI variables */
 
+    std::string directoryPath;
+
 
     const Eigen::Vector2i screenRes = SCREEN_RES;
 
@@ -62,7 +64,7 @@ public:
 
     // start optimization
     void runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta, float lambda,
-                         uint resolutionFactor, std::string directory);
+                         uint resolutionFactor);
 };
 
 
