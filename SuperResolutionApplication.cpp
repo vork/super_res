@@ -231,7 +231,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // Create optimization Button and set callback
     Button * optimizeButton = new Button(controlsWindow, "Optimize");
     optimizeButton->setTooltip("Click this button to start the optimization process. The result is shown in the window above.");
-    //TODO tooltip not fully visible
 
     // Start optimization on press button
     optimizeButton->setCallback([=] {
@@ -292,7 +291,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     helpWindow->setLayout(new GroupLayout());
     helpWindow->setTooltip("Click to get help.");
     Button * helpButton = new Button(helpWindow, "?");
-    //TODO tooltip not fully visible
 
     helpButton->setCallback([&] {
         auto dlg = new MessageDialog(this, MessageDialog::Type::Information, "Help", "Tooltips are provided for every button"

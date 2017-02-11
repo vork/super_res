@@ -392,7 +392,8 @@ void Screen::drawWidgets() {
         /* Draw tooltips */
         const Widget *widget = findWidget(mMousePos);
         if (widget && !widget->tooltip().empty()) {
-            int tooltipWidth = 150;
+//            int tooltipWidth = 150;
+            int tooltipWidth = 270;
 
             float bounds[4];
             nvgFontFace(mNVGContext, "sans");
