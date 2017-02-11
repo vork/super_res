@@ -14,23 +14,16 @@
 using namespace std;
 namespace fs = boost::filesystem;
 
-void ImageLoader::loadImages(string path, string filename, string ext, int totalImages, vector<Mat> &lowResImg) {
-    lowResImg.resize(totalImages);
-    for (int i = 0; i < totalImages; i++) {
-        ostringstream stringStream;
-        stringStream << path << filename << "_" << i << ext;
-        Mat img = imread(stringStream.str());
-        if(img.empty()) {
-            cerr << stringStream.str() << " can't be loaded!" << endl;
-            continue;
-        }
 
-        lowResImg.push_back(img);
-    }
-}
+
 
 
 vector<Mat> ImageLoader::loadImages(string directory) {
+    vector<string> filenames; // not used
+    return loadImages(directory, filenames);
+}
+
+vector<Mat> ImageLoader::loadImages(string directory, vector<string> &filenames) {
 
     vector<Mat> images;
 
@@ -47,10 +40,13 @@ vector<Mat> ImageLoader::loadImages(string directory) {
 
     for (it = fs::recursive_directory_iterator(dirPath); it != endit; it++) {
         if (fs::is_regular_file(*it)) {
-            fs::path ext = it->path().extension();
+
             fs::path filepath = it->path();
+            fs::path ext = filepath.extension();
 
             if (allowedFiletypes.find(ext.string()) != allowedFiletypes.end()) {
+
+                filenames.push_back(filepath.filename().string());
 
                 Mat img = imread(filepath.string());
                 if (img.empty()) {

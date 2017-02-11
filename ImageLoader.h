@@ -28,6 +28,7 @@ public:
      * @return vector of images
      */
     vector<Mat> loadImages(string directory);
+    vector<Mat> loadImages(string directory, vector<std::string> &filenames);
 };
 
 

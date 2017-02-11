@@ -305,6 +305,8 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
                                                  float lambda, uint resolutionFactor) {
 
+    vector<Mat> images;
+
     bool isDirectoryValid = true;
     string warningTitle, warningMessage;
 
@@ -319,19 +321,42 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
         warningTitle = "Directory not found";
         warningMessage = "The path '" + this->directoryPath + "' is not a valid directory.";
     }
+    else {
+        // load images
+        ImageLoader * imageLoader = new ImageLoader();
+        vector<string> filenames;
+        images = imageLoader->loadImages(directoryPath, filenames);
+
+        // make sure there is at least one image
+        if (images.size() == 0) {
+            isDirectoryValid = false;
+            warningTitle = "No images found";
+            warningMessage = "No images found in directory '" + this->directoryPath + "'.";
+        }
+        else {
+            // make sure all images are the same size
+            Size size = images[0].size();
+            for (int i = 1; i < images.size(); i++) {
+                if (images[i].size() != size) {
+
+                    isDirectoryValid = false;
+                    warningTitle = "Invalid image dimensions";
+                    warningMessage = "All images need to have the be the exact same size.\n";
+                    warningMessage += "Size of '" + filenames[0] + "' is different from ";
+                    warningMessage += "size of '" + filenames[i] + "'.";
+
+                    break;
+                }
+            }
+        }
+
+
+    }
 
     // print warning message if directory is not valid and leave optimization
     if (!isDirectoryValid) {
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
         return;
-    }
-
-
-    ImageLoader * imageLoader = new ImageLoader();
-    vector<Mat> images = imageLoader->loadImages(directoryPath);
-
-    if (images.size() == 0) {
-        cout << "No images found." << endl;
     }
 
     // convert images to Mat1f
