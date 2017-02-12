@@ -3,14 +3,16 @@
 
 NAMESPACE_BEGIN(nanogui)
 
+
 std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save) {
     std::string path = "";
     if (save) {
         NSSavePanel *saveDlg = [[NSSavePanel savePanel] retain];
 
         NSMutableArray *types = [NSMutableArray new];
-        for (size_t idx = 0; idx < filetypes.size(); ++idx)
+        for (size_t idx = 0; idx < filetypes.size(); ++idx) {
             [types addObject: [NSString stringWithUTF8String: filetypes[idx].first.c_str()]];
+        }
 
         [saveDlg setAllowedFileTypes: types];
 

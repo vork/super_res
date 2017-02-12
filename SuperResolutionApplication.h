@@ -32,6 +32,10 @@ protected:
     // required by nanogui for drawing window contents
     nanogui::GLShader mShader;
 
+    // scroll panel and image panel for the source images
+    nanogui::VScrollPanel * scrollPanel;
+    nanogui::ImagePanel * imagePanel;
+
     // window containing resultImageView (see below)
     nanogui::Window * resultImageWindow;
 
@@ -45,6 +49,9 @@ protected:
 
 
     /* Program state variables */
+
+    // low resolution images
+    std::vector<cv::Mat> sourceImages;
 
     // current directory path
     std::string directoryPath;
@@ -68,6 +75,9 @@ public:
     // start optimization
     void runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta, float lambda,
                          uint resolutionFactor);
+
+    // load images from current directory
+    void loadImages();
 };
 
 

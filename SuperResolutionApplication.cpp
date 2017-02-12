@@ -10,7 +10,6 @@
 #include <nanogui/textbox.h>
 #include <regex>
 
-
 #include <thread>
 #include <boost/filesystem/operations.hpp>
 #include <nanogui/nanogui.h>
@@ -25,7 +24,6 @@ using namespace std;
 using namespace cv;
 
 #define DIR_LABEL_PLACEHOLDER "not selected"
-
 
 
 SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
@@ -52,34 +50,89 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     isOptimizing = false; //variable that determines if optimization process is running.
 
     // ------ Create Low Resolution Image Panel ----------
-    Window * lowResImgs = new Window(this, "Low Resolution Images");
-    lowResImgs->setPosition(Vector2i(marginSpace, marginSpace));
-    lowResImgs->setFixedSize(Vector2i(windowWidthLeft, windowHeightUpper));
-    lowResImgs->setLayout(new GroupLayout());
+    Window * fileWindow = new Window(this, "Low Resolution Images");
+    fileWindow->setPosition(Vector2i(marginSpace, marginSpace));
+    fileWindow->setFixedSize(Vector2i(windowWidthLeft, windowHeightUpper));
+    fileWindow->setLayout(new GroupLayout());
 
 
     // File Dialog
-    new Label(lowResImgs, "File Dialog: ", "sans-bold");
+    new Label(fileWindow, "File Dialog: ", "sans-bold");
 
-    directoryPath = DIR_LABEL_PLACEHOLDER;
-    directoryLabel = new Label(lowResImgs, directoryPath, "sans-bold");
-    directoryLabel->setPosition(Vector2i(80, marginSpace + 21 ));
+    Widget * directoryWidget = new Widget(fileWindow);
+    directoryWidget->setLayout(new BoxLayout(Orientation::Horizontal, Alignment::Minimum, 0, 6));
 
-    Button * b = new Button(lowResImgs, "Choose directory in file system");
-    b->setPosition(Vector2i(100, 150));
-    b->setFixedSize(Vector2i(300, 35));
-    b->setTooltip("Click this button to choose the directory of the blurred images.");
-    b->setCallback([this] {
+
+    Button * openDirButton = new Button(directoryWidget, "Open Directory");
+//    openDirButton->setFixedSize(Vector2i(300, 35));
+//    b->setTooltip("Click this button to choose the directory of the blurred images.");
+    openDirButton->setCallback([this] {
         this->directoryPath = directory_dialog() + "/";
-        this->directoryLabel->setCaption(directoryPath);
+//        this->directoryLabel->setCaption(directoryPath);
+        this->loadImages();
+    });
+
+    Button * saveResultButton = new Button(directoryWidget, "Save Result");
+    saveResultButton->setCallback([this] {
+        vector<pair<string, string>> allowedFiletypes({
+            {"png", "Portable Network Graphics"},
+            {"jpg", "JPEG"}
+        });
+        string saveFilename = file_dialog(allowedFiletypes, true);
+        if (currentResultImage.empty()) {
+            string warningTitle = "No result image";
+            string warningMessage = "Run optimization before saving the result image.";
+            MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        }
+        else {
+
+            namespace fs = boost::filesystem;
+            fs::path filenamePath(saveFilename);
+
+            string extension = filenamePath.extension().string();
+
+            // check if valid extension
+            bool validExtension = false;
+            for (auto filetype : allowedFiletypes) {
+                if (filetype.first == extension) {
+                    validExtension = true;
+                    break;
+                }
+            }
+
+            // set jpeg by default
+            if (!validExtension) {
+                saveFilename = filenamePath.replace_extension("jpg").string();
+                printf("Invalid file extension. It is replaced by '.jpg'.\n");
+            }
+
+
+            imwrite(saveFilename, currentResultImage);
+        }
     });
 
 
+//    directoryPath = DIR_LABEL_PLACEHOLDER;
+//    directoryLabel = new Label(fileWindow, directoryPath, "sans-bold");
+
+
+
+    /* Image Panel */
+
+    scrollPanel = new VScrollPanel(fileWindow);
+    const int imagePanelHeight = 180;
+    scrollPanel->setFixedHeight(imagePanelHeight);
+    imagePanel = new ImagePanel(scrollPanel);
+    imagePanel->setFixedHeight(imagePanelHeight);
+
+    // hide scroll panel in the beginning
+    scrollPanel->setVisible(false);
+
 
     // ------ Create Control Parameter Window ----------
-    Window * controlParams = new Window(this, "Control Parameters");
-    controlParams->setPosition(Vector2i(marginSpace, windowHeightUpper + (2 * marginSpace)));
-    controlParams->setFixedSize(Vector2i(windowWidthLeft, screenHeight - (windowHeightUpper + (3 * marginSpace))));
+    Window * parameterWindow = new Window(this, "Control Parameters");
+    parameterWindow->setPosition(Vector2i(marginSpace, windowHeightUpper + (2 * marginSpace)));
+    parameterWindow->setFixedSize(Vector2i(windowWidthLeft, screenHeight - (windowHeightUpper + (3 * marginSpace))));
 
     GridLayout *layout =
             new GridLayout(Orientation::Horizontal, 2,
@@ -87,14 +140,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     layout->setColAlignment(
             { Alignment::Maximum, Alignment::Fill });
     layout->setSpacing(0, 10);
-    controlParams->setLayout(layout);
+    parameterWindow->setLayout(layout);
 
 
     /*Resolution Factor Label and Box */
-    Label * labelResolution = new Label(controlParams, "resolution factor:", "sans");
+    Label * labelResolution = new Label(parameterWindow, "resolution factor:", "sans");
     const string ttResolution = "Choose an integer value that is a power of 2.";
     labelResolution->setTooltip(ttResolution);
-    auto intBoxResolution = new IntBox<int>(controlParams);
+    auto intBoxResolution = new IntBox<int>(parameterWindow);
     intBoxResolution->setEditable(true);
     intBoxResolution->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxResolution->setValue(2);
@@ -110,10 +163,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /* Alpha Label and Box */
-    Label * labelAlpha = new Label(controlParams, "alpha:", "sans");
+    Label * labelAlpha = new Label(parameterWindow, "alpha:", "sans");
     const string ttAlpha = "Set alpha.";
     labelAlpha->setTooltip(ttAlpha);
-    auto floatBoxAlpha = new FloatBox<float>(controlParams);
+    auto floatBoxAlpha = new FloatBox<float>(parameterWindow);
     floatBoxAlpha->setEditable(true);
     floatBoxAlpha->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxAlpha->setValue(0.7f);
@@ -130,10 +183,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /* Beta Label and Box */
-    Label * labelBeta = new Label(controlParams, "beta:", "sans");
+    Label * labelBeta = new Label(parameterWindow, "beta:", "sans");
     const string ttBeta = "Set beta.";
     labelBeta->setTooltip(ttBeta);
-    auto floatBoxBeta = new FloatBox<float>(controlParams);
+    auto floatBoxBeta = new FloatBox<float>(parameterWindow);
     floatBoxBeta->setEditable(true);
     floatBoxBeta->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxBeta->setValue(1.0f);
@@ -149,10 +202,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /* Lambda Label and Box */
-    Label * labelLambda = new Label(controlParams, "lambda:", "sans");
+    Label * labelLambda = new Label(parameterWindow, "lambda:", "sans");
     const string ttLambda = "Set Lambda";
     labelLambda->setTooltip(ttLambda);
-    auto floatBoxLambda = new FloatBox<float>(controlParams);
+    auto floatBoxLambda = new FloatBox<float>(parameterWindow);
     floatBoxLambda->setEditable(true);
     floatBoxLambda->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     floatBoxLambda->setValue(0.04f);
@@ -168,10 +221,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /*Max Iterations Label and Box */
-    Label * labelMaxIter = new Label(controlParams, "max iterations:", "sans");
+    Label * labelMaxIter = new Label(parameterWindow, "max iterations:", "sans");
     const string ttMaxIter = "Choose the number of maximum iterations. An integer between 2 and 25 is recommended.";
     labelMaxIter->setTooltip(ttMaxIter);
-    auto intBoxMaxIter = new IntBox<int>(controlParams);
+    auto intBoxMaxIter = new IntBox<int>(parameterWindow);
     intBoxMaxIter->setEditable(true);
     intBoxMaxIter->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxMaxIter->setValue(2);
@@ -187,10 +240,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /*P Label and Box */
-    Label * labelP = new Label(controlParams, "p:", "sans");
+    Label * labelP = new Label(parameterWindow, "p:", "sans");
     const string ttP = "Set p.";
     labelP->setTooltip(ttP);
-    auto intBoxP = new IntBox<int>(controlParams);
+    auto intBoxP = new IntBox<int>(parameterWindow);
     intBoxP->setEditable(true);
     intBoxP->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxP->setValue(2);
@@ -205,10 +258,10 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
 
     /*Padding Label and Box */
-    Label * labelPadding = new Label(controlParams, "padding:", "sans");
+    Label * labelPadding = new Label(parameterWindow, "padding:", "sans");
     const string ttPadding = "Set padding.";
     labelPadding->setTooltip(ttPadding);
-    auto intBoxPad = new IntBox<int>(controlParams);
+    auto intBoxPad = new IntBox<int>(parameterWindow);
     intBoxPad->setEditable(true);
     intBoxPad->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
     intBoxPad->setValue(2);
@@ -305,63 +358,15 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
                                                  float lambda, uint resolutionFactor) {
 
-    vector<Mat> images;
-
-    bool isDirectoryValid = true;
-    string warningTitle, warningMessage;
-
-    if(directoryPath.empty() || directoryPath == DIR_LABEL_PLACEHOLDER){
-        isDirectoryValid = false;
-        warningTitle = "No directory specified";
-        warningMessage = "Please specify an image directory before optimizing.";
-
-    }
-    else if (!boost::filesystem::exists(directoryPath)) {
-        isDirectoryValid = false;
-        warningTitle = "Directory not found";
-        warningMessage = "The path '" + this->directoryPath + "' is not a valid directory.";
-    }
-    else {
-        // load images
-        ImageLoader * imageLoader = new ImageLoader();
-        vector<string> filenames;
-        images = imageLoader->loadImages(directoryPath, filenames);
-
-        // make sure there is at least one image
-        if (images.size() == 0) {
-            isDirectoryValid = false;
-            warningTitle = "No images found";
-            warningMessage = "No images found in directory '" + this->directoryPath + "'.";
-        }
-        else {
-            // make sure all images are the same size
-            Size size = images[0].size();
-            for (int i = 1; i < images.size(); i++) {
-                if (images[i].size() != size) {
-
-                    isDirectoryValid = false;
-                    warningTitle = "Invalid image dimensions";
-                    warningMessage = "All images need to have the be the exact same size.\n";
-                    warningMessage += "Size of '" + filenames[0] + "' is different from ";
-                    warningMessage += "size of '" + filenames[i] + "'.";
-
-                    break;
-                }
-            }
-        }
-
-
-    }
-
-    // print warning message if directory is not valid and leave optimization
-    if (!isDirectoryValid) {
+    if (sourceImages.size() < 2) {
+        string warningTitle = "Too few images";
+        string warningMessage = "At least 2 images needed to run optimization.";
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
-        return;
     }
 
     // convert images to Mat1f
     vector<Mat1f> grayFloatImages;
-    for (Mat image : images) {
+    for (Mat image : sourceImages) {
         Mat1b grayImage;
         cvtColor(image, grayImage, CV_BGR2GRAY);
         Mat1f grayFloatImage;
@@ -410,5 +415,82 @@ void SuperResolutionApplication::draw(NVGcontext *ctx) {
 void SuperResolutionApplication::drawContents() {
 
 //    mShader.bind();
+}
+
+void SuperResolutionApplication::loadImages() {
+
+    sourceImages.clear();
+
+    bool isDirectoryValid = true;
+    string warningTitle, warningMessage;
+
+    if(directoryPath.empty() || directoryPath == DIR_LABEL_PLACEHOLDER){
+        isDirectoryValid = false;
+        warningTitle = "No directory specified";
+        warningMessage = "Please specify an image directory before optimizing.";
+
+    }
+    else if (!boost::filesystem::exists(directoryPath)) {
+        isDirectoryValid = false;
+        warningTitle = "Directory not found";
+        warningMessage = "The path '" + this->directoryPath + "' is not a valid directory.";
+    }
+    else {
+        // load images
+        ImageLoader * imageLoader = new ImageLoader();
+        vector<string> filenames;
+        sourceImages = imageLoader->loadImages(directoryPath, filenames);
+
+        // make sure there is at least one image
+        if (sourceImages.size() == 0) {
+            isDirectoryValid = false;
+            warningTitle = "No images found";
+            warningMessage = "No images found in directory '" + this->directoryPath + "'.";
+        }
+        else {
+            // make sure all images are the same size
+            Size size = sourceImages[0].size();
+            for (int i = 1; i < sourceImages.size(); i++) {
+                if (sourceImages[i].size() != size) {
+
+                    isDirectoryValid = false;
+                    warningTitle = "Invalid image dimensions";
+                    warningMessage = "All images need to have the be the exact same size.\n";
+                    warningMessage += "Size of '" + filenames[0] + "' is different from ";
+                    warningMessage += "size of '" + filenames[i] + "'.";
+
+                    break;
+                }
+            }
+        }
+    }
+
+    // print warning message if directory is not valid and leave optimization
+    if (!isDirectoryValid) {
+        MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        return;
+    }
+
+    // add images to image panel
+
+    vector<pair<int, string>> panelImages;
+
+    for (Mat sourceImage : sourceImages) {
+        Mat alphaImage;
+        cvtColor(sourceImage, alphaImage, CV_BGR2BGRA);
+        int w = alphaImage.cols;
+        int h = alphaImage.rows;
+        int imageFlags = 0;
+        unsigned char * data = (unsigned char *)alphaImage.data;
+        int imageId = nvgCreateImageRGBA(mNVGContext, w , h, imageFlags, data);
+        string imageName = "test";
+        panelImages.push_back(pair<int, string>(imageId, imageName));
+    }
+
+    imagePanel->setImages(panelImages);
+    scrollPanel->setVisible(true);
+    performLayout();
+
+
 }
 
