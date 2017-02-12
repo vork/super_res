@@ -159,7 +159,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxResolution->setMinValue(1);
     intBoxResolution->setValueIncrement(1);
     intBoxResolution->setTooltip(ttResolution);
-    //TODO: Max Value setzen?
+    intBoxResolution->setMinMaxValues(1, 16);
 
 
     /* Alpha Label and Box */
@@ -178,7 +178,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxAlpha->setMinValue(0.0f);
     floatBoxAlpha->setValueIncrement(0.1f);
     floatBoxAlpha->setTooltip(ttAlpha);
-    //TODO gibt es einen Max Value?
+    floatBoxAlpha->setMinMaxValues(0.001f, 1000.0f);
 
 
 
@@ -198,7 +198,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxBeta->setMinValue(0.0f);
     floatBoxBeta->setValueIncrement(0.1f);
     floatBoxBeta->setTooltip(ttBeta);
-    //TODO gibt es einen Max Value?
+    floatBoxBeta->setMinMaxValues(0.001f, 1000.0f);
 
 
     /* Lambda Label and Box */
@@ -217,17 +217,17 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     floatBoxLambda->setMinValue(0.0f);
     floatBoxLambda->setValueIncrement(0.01f);
     floatBoxLambda->setTooltip(ttLambda);
-    //TODO gibt es einen Max Value?
+    floatBoxLambda->setMinMaxValues(0.001f, 1000.0f);
 
 
     /*Max Iterations Label and Box */
     Label * labelMaxIter = new Label(parameterWindow, "max iterations:", "sans");
-    const string ttMaxIter = "Choose the number of maximum iterations. An integer between 2 and 25 is recommended.";
+    const string ttMaxIter = "Choose the number of iterations. An integer between 5 and 25 is recommended.";
     labelMaxIter->setTooltip(ttMaxIter);
     auto intBoxMaxIter = new IntBox<int>(parameterWindow);
     intBoxMaxIter->setEditable(true);
     intBoxMaxIter->setFixedSize(Vector2i(parameterBoxWidth, parameterBoxHeight));
-    intBoxMaxIter->setValue(2);
+    intBoxMaxIter->setValue(20);
     intBoxMaxIter->setUnits("int");
     intBoxMaxIter->setDefaultValue("0");
     intBoxMaxIter->setFontSize(16);
@@ -236,6 +236,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxMaxIter->setMinValue(1);
     intBoxMaxIter->setValueIncrement(1);
     intBoxMaxIter->setTooltip(ttMaxIter);
+    intBoxMaxIter->setMinMaxValues(1, 100);
 
 
 
@@ -255,6 +256,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxP->setMinValue(1);
     intBoxP->setValueIncrement(1);
     intBoxP->setTooltip(ttP);
+    intBoxP->setMinMaxValues(1, 20);
 
 
     /*Padding Label and Box */
@@ -273,6 +275,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     intBoxPad->setMinValue(1);
     intBoxPad->setValueIncrement(1);
     intBoxPad->setTooltip(ttPadding);
+    intBoxPad->setMinMaxValues(0, 20);
 
 
     // ------ Create Optimize Button window ----------
