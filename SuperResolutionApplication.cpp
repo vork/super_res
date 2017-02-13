@@ -409,14 +409,14 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     // create default parameter set
     optimizationParameters = new Parameters(imageSet);
 
-    //Check if input is not null
-    (maxIterations == 0) ? optimizationParameters->setMaxIterations(2) : optimizationParameters->setMaxIterations(maxIterations);
-    (p == 0) ? optimizationParameters->setP(2) : optimizationParameters->setP(p);
-    (padding == 0) ? optimizationParameters->setPadding(2) : optimizationParameters->setPadding(padding);
-    (alpha == 0) ? optimizationParameters->setAlpha(0.7f) : optimizationParameters->setAlpha(alpha);
-    (beta == 0) ? optimizationParameters->setBeta(1.0f) : optimizationParameters->setBeta(beta);
-    (lambda == 0) ? optimizationParameters->setLambda(0.04f) : optimizationParameters->setLambda(lambda);
-    (resolutionFactor == 0) ? optimizationParameters->setResolutionFactor(2) : optimizationParameters->setResolutionFactor(resolutionFactor);
+
+    optimizationParameters->setMaxIterations(maxIterations);
+    optimizationParameters->setP(p);
+    optimizationParameters->setPadding(padding);
+    optimizationParameters->setAlpha(alpha);
+    optimizationParameters->setBeta(beta);
+    optimizationParameters->setLambda(lambda);
+    optimizationParameters->setResolutionFactor(resolutionFactor);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters);

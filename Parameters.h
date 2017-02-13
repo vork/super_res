@@ -18,6 +18,18 @@ typedef unsigned int uint;
  * parameter class that holds together all parameters that are necessary to compute a super-resolution image
  */
 
+#define DEFAULT_RES_FACTOR  2
+#define DEFAULT_ALPHA       0.7f
+#define DEFAULT_BETA        1.0f
+#define DEFAULT_LAMBDA      0.04f
+#define DEFAULT_P           2
+#define DEFAULT_ITERATIONS  20
+#define DEFAULT_PADDING     2
+
+// minimum value for all float parameters
+#define EPS 0.000001f
+
+
 class Parameters {
 
 protected:
@@ -44,17 +56,17 @@ public:
 
         // set default parameters
 
-        resolutionFactor = 2;
+        resolutionFactor = DEFAULT_RES_FACTOR;
 
         pointSpreadFunction = new GaussianPointSpreadFunction(3, 1.0f);
         pointSpreadFunction->createKernel();
 
-        alpha = 0.7f;
-        beta = 1.0f;
-        lambda = 0.04f;
-        p = 2;
-        maxIterations = 20;
-        padding = 2;
+        alpha = DEFAULT_ALPHA;
+        beta = DEFAULT_BETA;
+        lambda = DEFAULT_LAMBDA;
+        p = DEFAULT_P;
+        maxIterations = DEFAULT_ITERATIONS;
+        padding = DEFAULT_PADDING;
     }
 
     void setImageSet(ImageSet *imageSet) {
@@ -108,27 +120,57 @@ public:
     }
 
     void setResolutionFactor(uint _resolutionFactor){
-        resolutionFactor = _resolutionFactor;
+        if (_resolutionFactor == 0) {
+            resolutionFactor = DEFAULT_RES_FACTOR;
+        }
+        else {
+            resolutionFactor = _resolutionFactor;
+        }
     }
 
     void setAlpha(float _alpha){
-        alpha = _alpha;
+        if (_alpha <= EPS) {
+            alpha = DEFAULT_ALPHA;
+        }
+        else {
+            alpha = _alpha;
+        }
     }
 
     void setBeta(float _beta){
-        beta = _beta;
+        if (_beta <= EPS) {
+            beta = DEFAULT_BETA;
+        }
+        else {
+            beta = _beta;
+        }
     }
 
     void setLambda(float _lambda){
-        lambda = _lambda;
+        if (_lambda <= EPS) {
+            lambda = DEFAULT_LAMBDA;
+        }
+        else {
+            lambda = _lambda;
+        }
     }
 
     void setP(int _p){
-        p = _p;
+        if (p <= 0) {
+            p = DEFAULT_P;
+        }
+        else {
+            p = _p;
+        }
     }
 
     void setMaxIterations(uint _maxIterations) {
-        maxIterations = _maxIterations;
+        if (_maxIterations == 0) {
+
+        }
+        else {
+            maxIterations = _maxIterations;
+        }
     }
 
     void setPadding(uint _padding){
