@@ -62,6 +62,9 @@ protected:
     // indicates whether the optimization thread is currently running
     bool isOptimizing;
 
+    // determines whether the result image view will be updated after each iteration
+    bool showIterationResults = false;
+
     // set true to run the optimization in lock step, otherwise a separate thread will be used (currently not working)
     const bool runOptimizationInLockStep = true;
 
@@ -78,6 +81,8 @@ public:
 
     // load images from current directory
     void loadImages();
+
+    void displayImage(cv::Mat3b image) const;
 };
 
 

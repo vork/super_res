@@ -67,9 +67,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 //    openDirButton->setFixedSize(Vector2i(300, 35));
 //    b->setTooltip("Click this button to choose the directory of the blurred images.");
     openDirButton->setCallback([this] {
-        this->directoryPath = directory_dialog() + "/";
+        const string &directoryDialogResult = directory_dialog();
+
+        // make sure string is not empty (directory dialog cancelled)
+        if (directoryDialogResult.size() > 0) {
+            this->directoryPath = directoryDialogResult + "/";
 //        this->directoryLabel->setCaption(directoryPath);
-        this->loadImages();
+            this->loadImages();
+        }
     });
 
     Button * saveResultButton = new Button(directoryWidget, "Save Result");
@@ -106,7 +111,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
                 printf("Invalid file extension. It is replaced by '.jpg'.\n");
             }
 
-
             imwrite(saveFilename, currentResultImage);
         }
     });
@@ -116,7 +120,6 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 //    directoryLabel = new Label(fileWindow, directoryPath, "sans-bold");
 
 
-
     /* Image Panel */
 
     scrollPanel = new VScrollPanel(fileWindow);
@@ -124,6 +127,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     scrollPanel->setFixedHeight(imagePanelHeight);
     imagePanel = new ImagePanel(scrollPanel);
     imagePanel->setFixedHeight(imagePanelHeight);
+    imagePanel->setCallback([this](int index) {
+        if (index >= 0 && index < sourceImages.size()) {
+            displayImage(sourceImages[index]);
+        }
+        else {
+            printf("Image panel index %i is not valid for %i source images.\n", index, sourceImages.size());
+        }
+    });
 
     // hide scroll panel in the beginning
     scrollPanel->setVisible(false);
@@ -318,6 +329,19 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     });
 
+    CheckBox * showIterationResultsCheckBox = new CheckBox(controlsWindow, "Show intermediate results");
+    showIterationResultsCheckBox->setChecked(showIterationResults);
+    showIterationResultsCheckBox->setCallback([this](bool state) {
+        this->showIterationResults = state;
+
+        // show slowdown message
+        if (state) {
+            string warningTitle = "Optimization Slowdown";
+            string warningMessage = "Note: when showing intermediate results, the optimization process will take longer.";
+            MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        }
+    });
+
     // ------ Create Result Image window ----------
     // Initialize image view with a placeholder image
     string placeholderFilename = "images/text00.png";
@@ -334,10 +358,11 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     resultImageWindow = new Window(this, "Result");
     resultImageWindow->setPosition(Vector2i(500, marginSpace));
     resultImageWindow->setFixedSize(Vector2i(windowWidthRight, screenHeight - (4 * marginSpace) - buttonHeight));
-    resultImageWindow->setTooltip("The result image is shown in this window.");
+//    resultImageWindow->setTooltip("The result image is shown in this window.");
     resultImageWindow->setLayout(new GroupLayout());
     resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
-
+    const int imageViewHeight = resultImageWindow->fixedHeight() - 60;
+    resultImageView->setFixedHeight(imageViewHeight);
 
 
     // ------ Create help window ------
@@ -365,6 +390,7 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
         string warningTitle = "Too few images";
         string warningMessage = "At least 2 images needed to run optimization.";
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        return;
     }
 
     // convert images to Mat1f
@@ -384,29 +410,50 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     optimizationParameters = new Parameters(imageSet);
 
     //Check if input is not null
-    (maxIterations == NULL) ? optimizationParameters->setMaxIterations(2) : optimizationParameters->setMaxIterations(maxIterations);
-    (p == NULL) ? optimizationParameters->setP(2) : optimizationParameters->setP(p);
-    (padding == NULL) ? optimizationParameters->setPadding(2) : optimizationParameters->setPadding(padding);
-    (alpha == NULL) ? optimizationParameters->setAlpha(0.7f) : optimizationParameters->setAlpha(alpha);
-    (beta == NULL) ? optimizationParameters->setBeta(1.0f) : optimizationParameters->setBeta(beta);
-    (lambda == NULL) ? optimizationParameters->setLambda(0.04f) : optimizationParameters->setLambda(lambda);
-    (resolutionFactor == NULL) ? optimizationParameters->setResolutionFactor(2) : optimizationParameters->setResolutionFactor(resolutionFactor);
+    (maxIterations == 0) ? optimizationParameters->setMaxIterations(2) : optimizationParameters->setMaxIterations(maxIterations);
+    (p == 0) ? optimizationParameters->setP(2) : optimizationParameters->setP(p);
+    (padding == 0) ? optimizationParameters->setPadding(2) : optimizationParameters->setPadding(padding);
+    (alpha == 0) ? optimizationParameters->setAlpha(0.7f) : optimizationParameters->setAlpha(alpha);
+    (beta == 0) ? optimizationParameters->setBeta(1.0f) : optimizationParameters->setBeta(beta);
+    (lambda == 0) ? optimizationParameters->setLambda(0.04f) : optimizationParameters->setLambda(lambda);
+    (resolutionFactor == 0) ? optimizationParameters->setResolutionFactor(2) : optimizationParameters->setResolutionFactor(resolutionFactor);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters);
-    Mat1f hrImage = superResolution->compute();
 
+    superResolution->setIterationCallback([this](Mat1f intermediateResult) {
+        if (this->showIterationResults) {
+            Mat1b bResult;
+            intermediateResult.convertTo(bResult, CV_8UC1);
+            cvtColor(bResult, this->currentResultImage, CV_GRAY2BGR);
+            this->displayImage(this->currentResultImage);
+        }
+    });
+
+    Mat1f hrImage = superResolution->compute();
 
     // convert result to displayable format
     Mat1b bResult;
     hrImage.convertTo(bResult, CV_8UC1);
     cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
 
-    Texture * texture = new Texture(currentResultImage, "result");
-
-    resultImageView->bindImage(texture->getTextureId());
+    displayImage(currentResultImage);
 
     isOptimizing = false;
+}
+
+void SuperResolutionApplication::displayImage(Mat3b image) const {
+
+    Texture * texture = new Texture(image, "image");
+    resultImageView->bindImage(texture->getTextureId());
+
+    // compute scale
+    Vector2i imageViewSize = resultImageView->size();
+    Size imageSize = image.size();
+    float scale = fminf((float)imageViewSize.y() / (float)imageSize.height, (float)imageViewSize.x() / (float)imageSize.width);
+
+    resultImageView->setScale(scale);
+    resultImageView->center();
 }
 
 void SuperResolutionApplication::draw(NVGcontext *ctx) {
@@ -453,7 +500,7 @@ void SuperResolutionApplication::loadImages() {
         else {
             // make sure all images are the same size
             Size size = sourceImages[0].size();
-            for (int i = 1; i < sourceImages.size(); i++) {
+            for (unsigned int i = 1; i < sourceImages.size(); i++) {
                 if (sourceImages[i].size() != size) {
 
                     isDirectoryValid = false;
@@ -475,7 +522,6 @@ void SuperResolutionApplication::loadImages() {
     }
 
     // add images to image panel
-
     vector<pair<int, string>> panelImages;
 
     for (Mat sourceImage : sourceImages) {
@@ -494,6 +540,8 @@ void SuperResolutionApplication::loadImages() {
     scrollPanel->setVisible(true);
     performLayout();
 
+    // set first image in result view
+    displayImage(sourceImages[0]);
 
 }
 

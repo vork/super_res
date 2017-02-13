@@ -171,6 +171,11 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
         // subtract gradient
         hrImage = hrImage - (beta * gradient);
 
+        // call iteration callback with intermediate result
+        if (iterationCallback) {
+            iterationCallback(hrImage);
+        }
+
         iterationTimer.printTimeAndReset("rest");
 
         timer.setMarker();
@@ -180,4 +185,8 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
     timer.printTimeAndReset("gradient descent");
 
     return hrImage;
+}
+
+void SuperResolution::setIterationCallback(const function<void(Mat1f)> &iterationCallback) {
+    SuperResolution::iterationCallback = iterationCallback;
 }

@@ -38,6 +38,8 @@ protected:
     // create timer for runtime analysis
     Timer timer;
 
+    std::function<void(cv::Mat1f intermediateResult)> iterationCallback;
+
 
 public:
     SuperResolution(Parameters *parameters);
@@ -47,6 +49,10 @@ public:
 
     // compute super-resolution when initial solution and sqrtContributions are known
     cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f _initialSolution, cv::Mat1f _sqrtContributions);
+
+    void setIterationCallback(const std::function<void(cv::Mat1f)> &iterationCallback);
+
+
 };
 
 
