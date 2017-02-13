@@ -166,7 +166,7 @@ public:
 
     void setMaxIterations(uint _maxIterations) {
         if (_maxIterations == 0) {
-
+            maxIterations = DEFAULT_ITERATIONS;
         }
         else {
             maxIterations = _maxIterations;
