@@ -115,6 +115,11 @@ Mat1f SuperResolution::compute() {
 
     timer.reset();
 
+
+    Timer completeTimer;
+    completeTimer.reset();
+
+
     unique_ptr<OpticalFlow>opticalFlow(new OpticalFlow());
     vector<Point2f> imageFlows = opticalFlow->computeOffsetsForImageSet(parameters->getImageSet());
 
@@ -137,6 +142,8 @@ Mat1f SuperResolution::compute() {
     imwrite("median.png", hrImage);
 
     hrImage = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
+
+    completeTimer.printTimeAndReset("complete optimization time");
 
     return hrImage;
 }
