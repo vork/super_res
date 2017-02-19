@@ -433,9 +433,11 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     Mat1f hrImage = superResolution->compute();
 
     // convert result to displayable format
-    Mat1b bResult;
+    /*Mat1b bResult;
     hrImage.convertTo(bResult, CV_8UC1);
-    cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
+    cvtColor(bResult, currentResultImage, CV_GRAY2BGR);*/
+
+    currentResultImage = superResolution->extractColorInformation();
 
     displayImage(currentResultImage);
 

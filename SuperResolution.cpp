@@ -208,28 +208,32 @@ cv::Mat SuperResolution::extractColorInformation() {
     resize(referencef, refResize, size); //TODO maybe we need to set a bette interpolation?
 
     //Convert the images to lab
-    Mat labRef;
-    cvtColor(refResize, labRef, CV_BGR2Lab);
+    Mat refLab;
+    cvtColor(refResize, refLab, CV_BGR2Lab);
 
     //Convert the HiRes image to BGR
-    Mat colHi;
-    cvtColor(hrImage, colHi, CV_GRAY2BGR);
-    //Convert the BGR HiRes to lab
-    Mat labHi;
-    cvtColor(colHi, labHi, CV_BGR2Lab);
+    Mat hr = hrImage;
 
-    labRef.convertTo(labRef, CV_8UC3); //LabHi Should be the same depth as labRef.
-    labHi.convertTo(labHi, CV_8UC3);
+    refLab.convertTo(refLab, CV_8UC3); //LabHi Should be the same depth as labRef.
+    hr.convertTo(hr, CV_8UC1);
 
-    //now the channels are in LAB (X, Y, Z). Should be three channels.
+    //now the channels are in LAB (X, Y, Z).
     //So take the Y and Z Channel from the upscaled color image and insert them
     //in the hires image
-    int from_to[] = { 1,1, 2,2 };
-    mixChannels( &labRef, 1, &labHi, 1, from_to, 2);
+    vector<Mat> refChannels(3);
+    split(refLab, refChannels);
+
+    vector<Mat> retChannels;
+    retChannels.push_back(hr);
+    retChannels.push_back(refChannels[1]);
+    retChannels.push_back(refChannels[2]);
+
+    Mat retLab;
+    merge(retChannels, retLab);
 
     //Convert back to BGR
     Mat ret;
-    cvtColor(labHi, ret, CV_Lab2BGR);
+    cvtColor(retLab, ret, CV_Lab2BGR);
 
     return ret;
 }
