@@ -329,6 +329,14 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     });
 
+
+    CheckBox * hiResColorCheckBox = new CheckBox(controlsWindow, "Show colored image");
+    hiResColorCheckBox->setChecked(hiResColor);
+    hiResColorCheckBox->setTooltip("Check to see colors of colored images");
+    hiResColorCheckBox->setCallback([this](bool state) {
+        this->hiResColor= state;
+    });
+
 //    CheckBox * showIterationResultsCheckBox = new CheckBox(controlsWindow, "Show intermediate results");
 //    showIterationResultsCheckBox->setChecked(showIterationResults);
 //    showIterationResultsCheckBox->setCallback([this](bool state) {
@@ -432,12 +440,23 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
 
     Mat1f hrImage = superResolution->compute();
 
-    // convert result to displayable format
-    /*Mat1b bResult;
-    hrImage.convertTo(bResult, CV_8UC1);
-    cvtColor(bResult, currentResultImage, CV_GRAY2BGR);*/
-
-    currentResultImage = superResolution->extractColorInformation();
+    // only when image has 3 channels
+    //TODO überprüfen auf gray image (gleiche werte der Channel)
+    if (sourceImages[0].channels() == 3){
+        if (hiResColor) {
+            currentResultImage = superResolution->extractColorInformation();
+        } else {
+            // convert result to displayable format
+            Mat1b bResult;
+            hrImage.convertTo(bResult, CV_8UC1);
+            cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
+        }
+    } else {
+        string warningTitle = "too few channels";
+        string warningMessage = "3 channels are necessary for color image.";
+        MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        return;
+    }
 
     displayImage(currentResultImage);
 
