@@ -48,5 +48,5 @@ fabric.properties
 .DS_Store
 
 #images
-/images/*
 hr.png
+median.png
