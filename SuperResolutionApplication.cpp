@@ -526,7 +526,7 @@ void SuperResolutionApplication::loadImages() {
 
     for (Mat sourceImage : sourceImages) {
         Mat alphaImage;
-        cvtColor(sourceImage, alphaImage, CV_BGR2BGRA);
+        cvtColor(sourceImage, alphaImage, CV_BGR2RGBA);
         int w = alphaImage.cols;
         int h = alphaImage.rows;
         int imageFlags = 0;
