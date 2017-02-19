@@ -156,7 +156,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     /*Resolution Factor Label and Box */
     Label * labelResolution = new Label(parameterWindow, "resolution factor:", "sans");
-    const string ttResolution = "Choose an integer value that is a power of 2.";
+    const string ttResolution = "An integer value between 2 and 4 is recommended.";
     labelResolution->setTooltip(ttResolution);
     auto intBoxResolution = new IntBox<int>(parameterWindow);
     intBoxResolution->setEditable(true);
@@ -329,18 +329,18 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     });
 
-    CheckBox * showIterationResultsCheckBox = new CheckBox(controlsWindow, "Show intermediate results");
-    showIterationResultsCheckBox->setChecked(showIterationResults);
-    showIterationResultsCheckBox->setCallback([this](bool state) {
-        this->showIterationResults = state;
-
-        // show slowdown message
-        if (state) {
-            string warningTitle = "Optimization Slowdown";
-            string warningMessage = "Note: when showing intermediate results, the optimization process will take longer.";
-            MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
-        }
-    });
+//    CheckBox * showIterationResultsCheckBox = new CheckBox(controlsWindow, "Show intermediate results");
+//    showIterationResultsCheckBox->setChecked(showIterationResults);
+//    showIterationResultsCheckBox->setCallback([this](bool state) {
+//        this->showIterationResults = state;
+//
+//        // show slowdown message
+//        if (state) {
+//            string warningTitle = "Optimization Slowdown";
+//            string warningMessage = "Note: when showing intermediate results, the optimization process will take longer.";
+//            MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+//        }
+//    });
 
     // ------ Create Result Image window ----------
     // Initialize image view with a placeholder image
