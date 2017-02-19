@@ -407,7 +407,7 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
 
     // create default parameter set
-    optimizationParameters = new Parameters(imageSet);
+    optimizationParameters = new Parameters(imageSet, sourceImages[0]);
 
 
     optimizationParameters->setMaxIterations(maxIterations);
