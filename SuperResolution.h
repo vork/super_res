@@ -47,6 +47,9 @@ public:
     // compute super-resolution image
     cv::Mat1f compute();
 
+    // Extract the color information from the low res images and apply them in L*a*b space
+    cv::Mat extractColorInformation();
+
     // compute super-resolution when initial solution and sqrtContributions are known
     cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f _initialSolution, cv::Mat1f _sqrtContributions);
 

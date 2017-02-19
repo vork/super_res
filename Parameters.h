@@ -46,11 +46,12 @@ protected:
     int p;                      // gradient regularization radius
     uint maxIterations;
     uint padding; // crop lr images by padding to avoid black borders due to offsets
+    cv::Mat refImage;
 
 public:
 
     // default constructor
-    Parameters(ImageSet * _imageSet) {
+    Parameters(ImageSet * _imageSet, cv::Mat referenceImage) {
 
         setImageSet(_imageSet);
 
@@ -67,6 +68,7 @@ public:
         p = DEFAULT_P;
         maxIterations = DEFAULT_ITERATIONS;
         padding = DEFAULT_PADDING;
+        refImage = referenceImage;
     }
 
     void setImageSet(ImageSet *imageSet) {
@@ -93,6 +95,10 @@ public:
 
     PointSpreadFunction *getPointSpreadFunction() const {
         return pointSpreadFunction;
+    }
+
+    cv::Mat getRefImage() const {
+        return refImage;
     }
 
     float getAlpha() const {
