@@ -197,3 +197,39 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
 void SuperResolution::setIterationCallback(const function<void(Mat1f)> &iterationCallback) {
     SuperResolution::iterationCallback = iterationCallback;
 }
+
+cv::Mat SuperResolution::extractColorInformation() {
+    //Get the reference
+    Mat referencef = parameters->getRefImage();
+
+    //Resize the lowres ref image to the
+    Mat refResize;
+    Size size(hrImage.cols, hrImage.rows);
+    resize(referencef, refResize, size); //TODO maybe we need to set a bette interpolation?
+
+    //Convert the images to lab
+    Mat labRef;
+    cvtColor(refResize, labRef, CV_BGR2Lab);
+
+    //Convert the HiRes image to BGR
+    Mat colHi;
+    cvtColor(hrImage, colHi, CV_GRAY2BGR);
+    //Convert the BGR HiRes to lab
+    Mat labHi;
+    cvtColor(colHi, labHi, CV_BGR2Lab);
+
+    labRef.convertTo(labRef, CV_8UC3); //LabHi Should be the same depth as labRef.
+    labHi.convertTo(labHi, CV_8UC3);
+
+    //now the channels are in LAB (X, Y, Z). Should be three channels.
+    //So take the Y and Z Channel from the upscaled color image and insert them
+    //in the hires image
+    int from_to[] = { 1,1, 2,2 };
+    mixChannels( &labRef, 1, &labHi, 1, from_to, 2);
+
+    //Convert back to BGR
+    Mat ret;
+    cvtColor(labHi, ret, CV_Lab2BGR);
+
+    return ret;
+}
