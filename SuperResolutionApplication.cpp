@@ -13,6 +13,7 @@
 #include <thread>
 #include <boost/filesystem/operations.hpp>
 #include <nanogui/nanogui.h>
+#include <monitor.h>
 
 #include "ImageLoader.h"
 #include "SimpleImageSet.h"
@@ -26,25 +27,30 @@ using namespace cv;
 #define DIR_LABEL_PLACEHOLDER "not selected"
 
 
-SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREEN_RES, WINDOW_NAME) {
+SuperResolutionApplication::SuperResolutionApplication(Eigen::Vector2i _windowSize) : nanogui::Screen(_windowSize, WINDOW_NAME) {
 
-    //GUI size dependenciess
-    const int screenWidth = screenRes.x();  // complete window width
-    const int screenHeight = screenRes.y();  // complete window height
 
-    const int marginSpace = 25; //margin to the inner windows
+    windowSize = _windowSize;
 
-    const int windowWidthLeft = 450; //width of the left parts of the window
-    const int windowWidthRight = screenWidth - (3 * marginSpace) - windowWidthLeft; //width of the right parts of the window
+    //GUI size dependencies, weird numbers come from dependency to pixel values, that were chosen before.
 
-    const int windowHeightUpper = 300; //height of the upper windows
+    const int windowWidth = windowSize.x();
+    const int windowHeight = windowSize.y();
 
-    const int parameterBoxHeight = 20; //height of the parameter boxes
-    const int parameterBoxWidth = 120; //width of the parameter boxes
+    const int marginSpace = windowWidth * 0.0244;
 
-    const int buttonHeight = 70; //height of the buttons
+    const int windowWidthLeft = windowWidth * 0.4394;
 
-    const int widthPosOptimize = screenHeight-buttonHeight-marginSpace; //width for the Position of the window for the optimize Button
+    const int windowWidthRight = windowWidth - (3 * marginSpace) - windowWidthLeft; //width of the right parts of the window
+
+    const int windowHeightUpper = windowHeight * 0.39;
+
+    const int parameterBoxHeight = windowHeight * 0.026;
+    const int parameterBoxWidth = windowWidth * 0.1171;
+
+    const int buttonHeight = windowHeight * 0.0911;
+
+    const int widthPosOptimize = windowHeight-buttonHeight-marginSpace; //width for the Position of the window for the optimize Button
 
 
     isOptimizing = false; //variable that determines if optimization process is running.
@@ -65,7 +71,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     Button * openDirButton = new Button(directoryWidget, "Open Directory");
 //    openDirButton->setFixedSize(Vector2i(300, 35));
-//    b->setTooltip("Click this button to choose the directory of the blurred images.");
+    openDirButton->setTooltip("Click this button to choose the directory of the blurred images.");
     openDirButton->setCallback([this] {
         const string &directoryDialogResult = directory_dialog();
 
@@ -123,7 +129,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     /* Image Panel */
 
     scrollPanel = new VScrollPanel(fileWindow);
-    const int imagePanelHeight = 180;
+    const int imagePanelHeight = windowHeight * 0.234;
     scrollPanel->setFixedHeight(imagePanelHeight);
     imagePanel = new ImagePanel(scrollPanel);
     imagePanel->setFixedHeight(imagePanelHeight);
@@ -143,7 +149,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     // ------ Create Control Parameter Window ----------
     Window * parameterWindow = new Window(this, "Control Parameters");
     parameterWindow->setPosition(Vector2i(marginSpace, windowHeightUpper + (2 * marginSpace)));
-    parameterWindow->setFixedSize(Vector2i(windowWidthLeft, screenHeight - (windowHeightUpper + (3 * marginSpace))));
+    parameterWindow->setFixedSize(Vector2i(windowWidthLeft, windowHeight - (windowHeightUpper + (3 * marginSpace))));
 
     GridLayout *layout =
             new GridLayout(Orientation::Horizontal, 2,
@@ -364,18 +370,20 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // Create image window and view and display placeholder image
     resultImageWindow = new Window(this, "Result");
-    resultImageWindow->setPosition(Vector2i(500, marginSpace));
-    resultImageWindow->setFixedSize(Vector2i(windowWidthRight, screenHeight - (4 * marginSpace) - buttonHeight));
-//    resultImageWindow->setTooltip("The result image is shown in this window.");
+    resultImageWindow->setPosition(Vector2i(windowWidth * 0.488, marginSpace));
+
+    resultImageWindow->setFixedSize(Vector2i(windowWidthRight, windowHeight - (4 * marginSpace) - buttonHeight));
+    resultImageWindow->setTooltip("The result image is shown in this window.");
     resultImageWindow->setLayout(new GroupLayout());
     resultImageView = new ImageView(resultImageWindow, placeholderTexture->getTextureId());
-    const int imageViewHeight = resultImageWindow->fixedHeight() - 60;
+    const int imageViewHeight = resultImageWindow->fixedHeight() - (windowHeight * 0.078) ;
     resultImageView->setFixedHeight(imageViewHeight);
 
 
     // ------ Create help window ------
     Window * helpWindow = new Window(this, "");
-    helpWindow->setPosition(Vector2i(920, widthPosOptimize));
+    helpWindow->setPosition(Vector2i(windowWidth * 0.898, widthPosOptimize));
+
     helpWindow->setFixedSize(Vector2i(buttonHeight, buttonHeight));
     helpWindow->setLayout(new GroupLayout());
     helpWindow->setTooltip("Click to get help.");

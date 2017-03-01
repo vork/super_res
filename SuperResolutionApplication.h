@@ -14,8 +14,9 @@
 #include <nanogui/label.h>
 #include <cv.hpp>
 #include "Parameters.h"
+#include <GLFW/glfw3.h>
 
-#define SCREEN_RES Eigen::Vector2i(1024, 768)
+
 #define WINDOW_NAME "Super-Resolution"
 
 class SuperResolutionApplication : public nanogui::Screen {
@@ -24,7 +25,7 @@ protected:
 
     /* GUI variables */
 
-    const Eigen::Vector2i screenRes = SCREEN_RES;
+    Eigen::Vector2i windowSize;
 
     // label displaying the current directory path;
     nanogui::Label * directoryLabel;
@@ -72,7 +73,7 @@ protected:
     const bool runOptimizationInLockStep = true;
 
 public:
-    SuperResolutionApplication();
+    SuperResolutionApplication(Eigen::Vector2i _windowSize);
 
     // used by nanogui to update window contents
     virtual void draw(NVGcontext *ctx);
