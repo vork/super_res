@@ -52,7 +52,7 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
 
 
     // iterate over all other images
-    for (int i = 1; i < imageSet->getNumImages(); i++) {
+    for (int i = 1; i < (int) imageSet->getNumImages(); i++) {
 
         Mat1f imagef = imageSet->next();
         Mat1b image;
@@ -74,13 +74,13 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
 
 
         vector<Point2f> cornerOffsets(corners.size());
-        for (int j = 0; j < corners.size(); j++) {
+        for (int j = 0; j < (int) corners.size(); j++) {
             cornerOffsets[j] = nextCorners[j] - corners[j];
         }
 
         // filter corners (remove outliers)
         bool offsetFilterSuccess[cornerOffsets.size()];
-        for (int j = 0; j < cornerOffsets.size(); j++) {
+        for (int j = 0; j < (int) cornerOffsets.size(); j++) {
             offsetFilterSuccess[j] = false;
         }
         cornerOffsets = filterOffsets(cornerOffsets, offsetFilterSuccess);
@@ -91,13 +91,14 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
 
         // compute the average of relative offsets
         Point2f relativeAverageOffset(0.0f, 0.0f);
-        for (int j = 0; j < cornerOffsets.size(); j++) {
+        for (int j = 0; j < (int) cornerOffsets.size(); j++) {
             relativeAverageOffset += cornerOffsets[j];
         }
         relativeAverageOffset /= (float)cornerOffsets.size();
 
         // add to offsets list
         offsets.push_back(relativeAverageOffset);
+
 
 #if VISUALIZE
 
@@ -106,7 +107,7 @@ vector<Point2f> OpticalFlow::computeOffsetsForImageSet(ImageSet *imageSet) {
         Mat3f faded;
         cvtColor(fadedGray, faded, CV_GRAY2BGR);
         faded = faded / 255;
-        for (int j = 0; j < corners.size(); j++) {
+        for (int j = 0; j < (int) corners.size(); j++) {
             Vec3f lineColor = Vec3f(1.0f, 1.0f, 0);
             if (!offsetFilterSuccess[j]) {
                 lineColor = Vec3f(0.0f, 0.0f, 1.0f);
@@ -168,7 +169,7 @@ vector<Point2f> OpticalFlow::filterOffsets(vector<Point2f> offsets, bool * succe
     // calculate median x and y offset
     int numOffsets = offsets.size();
     float xvals[numOffsets], yvals[numOffsets];
-    for (int j = 0; j < offsets.size(); j++) {
+    for (int j = 0; j < (int) offsets.size(); j++) {
         Point2f offset = offsets[j];
         xvals[j] = offset.x;
         yvals[j] = offset.y;
