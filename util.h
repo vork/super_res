@@ -47,5 +47,10 @@ cv::Mat1f alignImages(std::vector<cv::Mat1f> images);
 
 cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding = 0, float fill = 0.0f);
 
+/**
+ * For a 3-channel image, determine whether it uses colors or not
+ */
+bool isGrayscaleImage(cv::Mat3b image);
+
 
 #endif SUPER_RES_UTIL_H

@@ -18,6 +18,7 @@
 #include "SimpleImageSet.h"
 #include "SuperResolution.h"
 #include "Texture.h"
+#include "util.h"
 
 using namespace nanogui;
 using namespace std;
@@ -330,12 +331,15 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     });
 
 
-    CheckBox * hiResColorCheckBox = new CheckBox(controlsWindow, "Show colored image");
+    hiResColorCheckBox = new CheckBox(controlsWindow, "Compute colored high resolution image");
     hiResColorCheckBox->setChecked(hiResColor);
-    hiResColorCheckBox->setTooltip("Check to see colors of colored images");
+    hiResColorCheckBox->setTooltip("Only enabled for colored images");
     hiResColorCheckBox->setCallback([this](bool state) {
         this->hiResColor= state;
     });
+
+    // disable checkbox at the beginning
+    hiResColorCheckBox->setEnabled(false);
 
 //    CheckBox * showIterationResultsCheckBox = new CheckBox(controlsWindow, "Show intermediate results");
 //    showIterationResultsCheckBox->setChecked(showIterationResults);
@@ -508,9 +512,20 @@ void SuperResolutionApplication::loadImages() {
     }
     else {
         // load images
-        ImageLoader * imageLoader = new ImageLoader();
+        unique_ptr<ImageLoader> imageLoader(new ImageLoader());
         vector<string> filenames;
         sourceImages = imageLoader->loadImages(directoryPath, filenames);
+
+        areSourceImagesColored = true;
+        for (Mat image : sourceImages) {
+            if (isGrayscaleImage(image)) {
+                areSourceImagesColored = false;
+                break;
+            }
+        }
+
+        // enable / disable checkbox based on whether the source images are colored or not
+        hiResColorCheckBox->setEnabled(areSourceImagesColored);
 
         // make sure there is at least one image
         if (sourceImages.size() == 0) {

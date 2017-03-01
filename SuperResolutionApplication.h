@@ -42,6 +42,10 @@ protected:
     // image view for displaying and analyzing the result
     nanogui::ImageView * resultImageView;
 
+    // checkbox that indicates whether to compute a color or grayscale image
+    nanogui::CheckBox * hiResColorCheckBox;
+
+
     /* Optimization variables */
 
     // contains all parameters used for the optimization, do only use this parameter set!
@@ -52,6 +56,9 @@ protected:
 
     // low resolution images
     std::vector<cv::Mat> sourceImages;
+
+    // indicates whether the source images are color or grayscale images
+    bool areSourceImagesColored = true;
 
     // current directory path
     std::string directoryPath;

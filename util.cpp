@@ -158,7 +158,17 @@ cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding, float fill)
     shifted(Rect(Point(padding, padding), size)).copyTo(cropped);
 
 
-
     return cropped;
 }
 
+bool isGrayscaleImage(Mat3b image) {
+    long n = image.rows * image.cols;
+    Vec3b * data = (Vec3b *)image.data;
+    for (long i = 0; i < n; i++) {
+        Vec3b color = data[i];
+        if (color[0] != color[1] || color[1] != color[2]) {
+            return false;
+        }
+    }
+    return true;
+}
