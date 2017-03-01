@@ -79,7 +79,7 @@ public:
         kernel /= kernelSum;
     }
 
-    GaussianPointSpreadFunction * flipped() {
+    GaussianPointSpreadFunction * flipped() override {
         GaussianPointSpreadFunction * fl = new GaussianPointSpreadFunction(kernelDim, sigma);
 
         // gaussian psf is point symmetric

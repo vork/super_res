@@ -89,6 +89,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
             string warningTitle = "No result image";
             string warningMessage = "Run optimization before saving the result image.";
             MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+            (void)dialog; // silence unused variable warning
         }
         else {
 
@@ -129,11 +130,11 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
     imagePanel = new ImagePanel(scrollPanel);
     imagePanel->setFixedHeight(imagePanelHeight);
     imagePanel->setCallback([this](int index) {
-        if (index >= 0 && index < sourceImages.size()) {
+        if (index >= 0 && index < (int)sourceImages.size()) {
             displayImage(sourceImages[index]);
         }
         else {
-            printf("Image panel index %i is not valid for %i source images.\n", index, sourceImages.size());
+            printf("Image panel index %i is not valid for %i source images.\n", index, (int)sourceImages.size());
         }
     });
 
@@ -389,6 +390,7 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 
     // required by nanogui to render GUI
     performLayout();
+
 }
 
 void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint padding, float alpha, float beta,
@@ -398,6 +400,7 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
         string warningTitle = "Too few images";
         string warningMessage = "At least 2 images needed to run optimization.";
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        (void)dialog; // silence unused variable warning
         return;
     }
 
@@ -455,6 +458,7 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
         string warningTitle = "too few channels";
         string warningMessage = "3 channels are necessary for color image.";
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        (void)dialog; // silence unused variable warning
         return;
     }
 
@@ -550,6 +554,7 @@ void SuperResolutionApplication::loadImages() {
     // print warning message if directory is not valid and leave optimization
     if (!isDirectoryValid) {
         MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+        (void)dialog; // silence unused variable warning
         return;
     }
 
