@@ -355,13 +355,9 @@ SuperResolutionApplication::SuperResolutionApplication() : nanogui::Screen(SCREE
 //    });
 
     // ------ Create Result Image window ----------
+
     // Initialize image view with a placeholder image
-    string placeholderFilename = "images/text00.png";
-    currentResultImage = imread(placeholderFilename);
-    if (!currentResultImage.data) {
-        cout << "image '" << placeholderFilename << "' can not be found." << endl;
-        exit(0);
-    }
+    currentResultImage = Mat3b(Size(0, 0));
 
     // Convert OpenCV image to OpenGL texture wrapper object
     Texture * placeholderTexture = new Texture(currentResultImage, "result placeholder");
