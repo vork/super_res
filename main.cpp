@@ -9,15 +9,13 @@ using namespace Eigen;
 
 
 Vector2i getScreenSize() {
-    GLFWmonitor * monitor;
-    const GLFWvidmode * screen;
-    screen = glfwGetVideoMode(monitor);
+    GLFWmonitor * monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode * screen = glfwGetVideoMode(monitor);
     Vector2i screenSize(screen->width, screen->height);
     return screenSize;
 }
 
 int main() {
-
 
     try {
         nanogui::init();
