@@ -9,16 +9,27 @@
 #include "ImageSet.h"
 #include "Timer.h"
 
+
+struct MedianEstimationResult {
+    cv::Mat1f medianEstimate;
+    cv::Mat1f sqrtContributions;
+
+    MedianEstimationResult(const cv::Mat1f &_medianEstimate, const cv::Mat1f &_sqrtContributions) {
+        medianEstimate = _medianEstimate;
+        sqrtContributions = _sqrtContributions;
+    }
+};
+
+typedef std::vector<cv::Point2f> PointList;
+
 /**
  * Wrapper class for the superresolution algorithm
  */
-
 
 class SuperResolution {
 
 protected:
     Parameters * parameters;
-    std::vector<cv::Point2f> offsets;
 
     cv::Size lrSize;
     cv::Size hrSize;
@@ -40,6 +51,7 @@ protected:
 
     std::function<void(cv::Mat1f intermediateResult)> iterationCallback;
 
+    MedianEstimationResult medianEstimation(ImageSet * imageSet, PointList offsets);
 
 public:
     SuperResolution(Parameters *parameters);

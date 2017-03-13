@@ -29,8 +29,6 @@ include_directories(
 
 set(SOURCE_FILES
         main.cpp
-        MedianEstimation.cpp
-        MedianEstimation.h
         OpticalFlow.cpp
         OpticalFlow.h
         ImageLoader.cpp
