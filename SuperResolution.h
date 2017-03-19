@@ -29,6 +29,9 @@ typedef std::vector<cv::Point2f> PointList;
 class SuperResolution {
 
 protected:
+
+    bool computeColoredResult;
+
     Parameters * parameters;
 
     cv::Size lrSize;
@@ -41,7 +44,7 @@ protected:
     cv::Mat1f initialSolution;
 
     // current high resolution image
-    cv::Mat1f hrImage;
+    cv::Mat3f hrImage;
 
     cv::Mat1f gradientBackProject();
     cv::Mat1f gradientRegulization();
@@ -54,18 +57,20 @@ protected:
     MedianEstimationResult medianEstimation(ImageSet * imageSet, PointList offsets);
 
 public:
-    SuperResolution(Parameters *parameters);
+    SuperResolution(Parameters *parameters, bool _computeColoredResult);
 
     // compute super-resolution image
-    cv::Mat1f compute();
+    cv::Mat3f compute();
 
     // Extract the color information from the low res images and apply them in L*a*b space
-    cv::Mat extractColorInformation();
+//    cv::Mat extractColorInformation();
 
     // compute super-resolution when initial solution and sqrtContributions are known
     cv::Mat1f computeWithInitialSolutionAndSqrtContributions(cv::Mat1f _initialSolution, cv::Mat1f _sqrtContributions);
 
     void setIterationCallback(const std::function<void(cv::Mat1f)> &iterationCallback);
+
+
 
 
 };

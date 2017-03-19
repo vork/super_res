@@ -52,5 +52,7 @@ cv::Mat1f shiftImage(cv::Mat1f image, cv::Point offset, int padding = 0, float f
  */
 bool isGrayscaleImage(cv::Mat3b image);
 
+cv::Mat3f convertToYCrCb(cv::Mat3f rgbImage);
+cv::Mat3f convertToRGB(cv::Mat3f yCrCbImage);
 
 #endif SUPER_RES_UTIL_H

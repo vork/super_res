@@ -34,7 +34,8 @@ class Parameters {
 
 protected:
 
-    ImageSet * imageSet;
+    // low resolution images (RGB, normalized)
+    std::vector<cv::Mat3f> lowResolutionImages;
 
     cv::Size lowResSize;       // size of the low resolution image
     cv::Size highResSize;
@@ -46,14 +47,16 @@ protected:
     int p;                      // gradient regularization radius
     uint maxIterations;
     uint padding; // crop lr images by padding to avoid black borders due to offsets
-    cv::Mat refImage;
+
+    // TODO: what is the ref image?
+//    cv::Mat refImage;
 
 public:
 
     // default constructor
-    Parameters(ImageSet * _imageSet, cv::Mat referenceImage) {
+    Parameters(std::vector<cv::Mat3f> _lowResolutionImages) {
 
-        setImageSet(_imageSet);
+        setLowResolutionImages(_lowResolutionImages);
 
         // set default parameters
 
@@ -68,17 +71,19 @@ public:
         p = DEFAULT_P;
         maxIterations = DEFAULT_ITERATIONS;
         padding = DEFAULT_PADDING;
-        refImage = referenceImage;
+//        refImage = referenceImage;
     }
 
-    void setImageSet(ImageSet *imageSet) {
-        Parameters::imageSet = imageSet;
-        lowResSize = imageSet->getImageSize();
+    const std::vector<cv::Mat3f> &getLowResolutionImages() const {
+        return lowResolutionImages;
+
+    }
+
+    void setLowResolutionImages(const std::vector<cv::Mat3f> &lowResolutionImages) {
+        Parameters::lowResolutionImages = lowResolutionImages;
+        assert(lowResolutionImages.size() > 0);
+        lowResSize = lowResolutionImages[0].size();
         highResSize = cv::Size(lowResSize.width * resolutionFactor + 1, lowResSize.height * resolutionFactor + 1);
-    }
-
-    ImageSet *getImageSet() const {
-        return imageSet;
     }
 
     const cv::Size &getLowResSize() const {
@@ -95,10 +100,6 @@ public:
 
     PointSpreadFunction *getPointSpreadFunction() const {
         return pointSpreadFunction;
-    }
-
-    cv::Mat getRefImage() const {
-        return refImage;
     }
 
     float getAlpha() const {

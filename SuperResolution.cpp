@@ -7,11 +7,13 @@
 #include "SuperResolution.h"
 #include "OpticalFlow.h"
 #include "util.h"
+#include "SimpleImageSet.h"
 
 using namespace cv;
 using namespace std;
 
-SuperResolution::SuperResolution(Parameters *parameters) {
+SuperResolution::SuperResolution(Parameters *parameters, bool _computeColoredResult) {
+    computeColoredResult = _computeColoredResult;
     this->parameters = parameters;
 }
 
@@ -110,7 +112,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
     return reg;
 }
 
-Mat1f SuperResolution::compute() {
+Mat3f SuperResolution::compute() {
 
     timer.reset();
 
@@ -118,9 +120,21 @@ Mat1f SuperResolution::compute() {
     Timer completeTimer;
     completeTimer.reset();
 
+    vector<Mat1f> grayImages;
+    vector<Mat1f> crImages, cbImages;
+    for (Mat3f rgbImage : parameters->getLowResolutionImages()) {
+        Mat3f yCrCbImage = convertToYCrCb(rgbImage);
+        vector<Mat1f> channels(3);
+        split(rgbImage, channels);
+        grayImages.push_back(channels[0]);
+        crImages.push_back(channels[1]);
+        cbImages.push_back(channels[2]);
+    }
+
 
     unique_ptr<OpticalFlow>opticalFlow(new OpticalFlow());
-    vector<Point2f> imageFlows = opticalFlow->computeOffsetsForImageSet(parameters->getImageSet());
+    ImageSet * grayImageSet = new SimpleImageSet(grayImages);
+    vector<Point2f> imageFlows = opticalFlow->computeOffsetsForImageSet(grayImageSet);
 
     // compute offsets as negative image flow
     vector<Point2f> offsets;
@@ -131,8 +145,9 @@ Mat1f SuperResolution::compute() {
     timer.printTimeAndReset("offset computation");
 
     // compute median estimation
-    MedianEstimationResult medianEstimationResult = medianEstimation(parameters->getImageSet(), offsets);
-    hrImage = medianEstimationResult.medianEstimate;
+    MedianEstimationResult medianEstimationResult = medianEstimation(grayImageSet, offsets);
+
+    Mat3f hrGray = medianEstimationResult.medianEstimate;
     sqrtContributions = medianEstimationResult.sqrtContributions;
 
     timer.printTimeAndReset("median estimation");
@@ -140,7 +155,29 @@ Mat1f SuperResolution::compute() {
     // DEBUG: write median estimation image
     imwrite("median.png", hrImage);
 
-    hrImage = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
+    hrGray = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
+
+    if (computeColoredResult) {
+        unique_ptr<ImageSet> crImageSet(new SimpleImageSet(crImages));
+        MedianEstimationResult crMEResult = medianEstimation(crImageSet.get(), offsets);
+        Mat1f crResult = crMEResult.medianEstimate;
+        unique_ptr<ImageSet> cbImageSet(new SimpleImageSet(cbImages));
+        MedianEstimationResult cbMEResult = medianEstimation(cbImageSet.get(), offsets);
+        Mat1f cbResult = cbMEResult.medianEstimate;
+        vector<Mat1f> channels(3);
+        channels[0] = hrGray;
+        channels[1] = crResult;
+        channels[2] = cbResult;
+        Mat3f yCrCbResult;
+        merge(channels, yCrCbResult);
+        cvtColor(yCrCbResult, hrImage, CV_YCrCb2RGB);
+
+        // TODO: test
+    }
+    else {
+        // distribute gray information to all channels
+        cvtColor(hrGray, hrImage, CV_GRAY2RGB);
+    }
 
     completeTimer.printTimeAndReset("complete optimization time");
 
@@ -152,7 +189,7 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
     timer.reset();
 
     initialSolution = _initialSolution.clone();
-    hrImage = _initialSolution;
+    Mat1f hrGray = _initialSolution;
     sqrtContributions = _sqrtContributions;
 
 
@@ -175,11 +212,11 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
          gradient = backProjected + (lambda * regularized);
 
         // subtract gradient
-        hrImage = hrImage - (beta * gradient);
+        hrGray = hrGray - (beta * gradient);
 
         // call iteration callback with intermediate result
         if (iterationCallback) {
-            iterationCallback(hrImage);
+            iterationCallback(hrGray);
         }
 
         iterationTimer.printTimeAndReset("rest");
@@ -190,52 +227,52 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
 
     timer.printTimeAndReset("gradient descent");
 
-    return hrImage;
+    return hrGray;
 }
 
 void SuperResolution::setIterationCallback(const function<void(Mat1f)> &iterationCallback) {
     SuperResolution::iterationCallback = iterationCallback;
 }
 
-cv::Mat SuperResolution::extractColorInformation() {
-    //Get the reference
-    Mat referencef = parameters->getRefImage();
-
-    //Resize the lowres ref image to the
-    Mat refResize;
-    Size size(hrImage.cols, hrImage.rows);
-    resize(referencef, refResize, size); //TODO maybe we need to set a better interpolation?
-
-    //Convert the images to lab
-    Mat refLab;
-    cvtColor(refResize, refLab, CV_BGR2Lab);
-
-    //Convert the HiRes image to BGR
-    Mat hr = hrImage;
-
-    refLab.convertTo(refLab, CV_8UC3); //LabHi Should be the same depth as labRef.
-    hr.convertTo(hr, CV_8UC1);
-
-    //now the channels are in LAB (X, Y, Z).
-    //So take the Y and Z Channel from the upscaled color image and insert them
-    //in the hires image
-    vector<Mat> refChannels(3);
-    split(refLab, refChannels);
-
-    vector<Mat> retChannels;
-    retChannels.push_back(hr);
-    retChannels.push_back(refChannels[1]);
-    retChannels.push_back(refChannels[2]);
-
-    Mat retLab;
-    merge(retChannels, retLab);
-
-    //Convert back to BGR
-    Mat ret;
-    cvtColor(retLab, ret, CV_Lab2BGR);
-
-    return ret;
-}
+//cv::Mat SuperResolution::extractColorInformation() {
+//    //Get the reference
+//    Mat referencef = parameters->getRefImage();
+//
+//    //Resize the lowres ref image to the
+//    Mat refResize;
+//    Size size(hrImage.cols, hrImage.rows);
+//    resize(referencef, refResize, size); //TODO maybe we need to set a better interpolation?
+//
+//    //Convert the images to lab
+//    Mat refLab;
+//    cvtColor(refResize, refLab, CV_BGR2Lab);
+//
+//    //Convert the HiRes image to BGR
+//    Mat hr = hrImage;
+//
+//    refLab.convertTo(refLab, CV_8UC3); //LabHi Should be the same depth as labRef.
+//    hr.convertTo(hr, CV_8UC1);
+//
+//    //now the channels are in LAB (X, Y, Z).
+//    //So take the Y and Z Channel from the upscaled color image and insert them
+//    //in the hires image
+//    vector<Mat> refChannels(3);
+//    split(refLab, refChannels);
+//
+//    vector<Mat> retChannels;
+//    retChannels.push_back(hr);
+//    retChannels.push_back(refChannels[1]);
+//    retChannels.push_back(refChannels[2]);
+//
+//    Mat retLab;
+//    merge(retChannels, retLab);
+//
+//    //Convert back to BGR
+//    Mat ret;
+//    cvtColor(retLab, ret, CV_Lab2BGR);
+//
+//    return ret;
+//}
 
 MedianEstimationResult SuperResolution::medianEstimation(ImageSet * imageSet, PointList offsets) {
 
@@ -249,8 +286,6 @@ MedianEstimationResult SuperResolution::medianEstimation(ImageSet * imageSet, Po
 
     // discrete offsets for each image in high resolution space (relative to offset in low resolution space)
     vector<Point> subpixelOffsets;
-
-
 
     for (Point2f p : offsets) {
 
@@ -268,7 +303,6 @@ MedianEstimationResult SuperResolution::medianEstimation(ImageSet * imageSet, Po
 
     // align all images in discrete space
     ImageSet *croppedShiftedImageSet = imageSet->computeImageSetWithOffsets(imageOffsets, padding);
-    parameters->setImageSet(croppedShiftedImageSet);
 
     // estimated high resolution image
     Mat1f estimate(parameters->getHighResSize(), 0.0f);
@@ -304,7 +338,7 @@ MedianEstimationResult SuperResolution::medianEstimation(ImageSet * imageSet, Po
                 float sqrtContribution = sqrtf(currentOffsetIndices.size());
 
                 // get subset of images with current offset
-                ImageSet *imageSubset = parameters->getImageSet()->createSubset(currentOffsetIndices);
+                ImageSet *imageSubset = croppedShiftedImageSet->createSubset(currentOffsetIndices);
 
                 // compute pixel wise median
                 Mat1f medianSubimage = imageSubset->computePixelwiseMedian();

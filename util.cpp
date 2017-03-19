@@ -6,6 +6,7 @@
 #include "util.h"
 #include <fstream>
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 
 
 using namespace std;
@@ -171,4 +172,16 @@ bool isGrayscaleImage(Mat3b image) {
         }
     }
     return true;
+}
+
+Mat3f convertToYCrCb(cv::Mat3f rgbImage) {
+    Mat3f yCrCbImage;
+    cvtColor(rgbImage, yCrCbImage, CV_RGB2YCrCb);
+    return yCrCbImage;
+}
+
+Mat3f convertToRGB(cv::Mat3f yCrCbImage) {
+    Mat3f rgbImage;
+    cvtColor(yCrCbImage, rgbImage, CV_YCrCb2RGB);
+    return rgbImage;
 }

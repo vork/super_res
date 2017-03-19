@@ -73,7 +73,7 @@ protected:
     // determines whether the result image view will be updated after each iteration
     bool showIterationResults = false;
 
-    // determines wheater the result image view will be in color or not
+    // bool indicating whether a colored image is going to be computed (represents the state of the hiResColorCheckBox)
     bool hiResColor = false;
 
     // set true to run the optimization in lock step, otherwise a separate thread will be used (currently not working)

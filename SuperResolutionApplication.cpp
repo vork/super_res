@@ -413,21 +413,15 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     }
 
     // convert images to Mat1f
-    vector<Mat1f> grayFloatImages;
+    vector<Mat3f> rgbImages;
     for (Mat image : sourceImages) {
-        Mat1b grayImage;
-        cvtColor(image, grayImage, CV_BGR2GRAY);
-        Mat1f grayFloatImage;
-        grayImage.convertTo(grayFloatImage, CV_32FC1);
-        grayFloatImages.push_back(grayFloatImage);
+        Mat3f rgbImage;
+        image.convertTo(rgbImage, CV_32FC3);
+        rgbImages.push_back(rgbImage);
     }
 
-    // create simple image set (all images are stored in RAM)
-    ImageSet * imageSet = new SimpleImageSet(grayFloatImages);
-
     // create default parameter set
-    optimizationParameters = new Parameters(imageSet, sourceImages[0]);
-
+    optimizationParameters = new Parameters(rgbImages);
 
     optimizationParameters->setMaxIterations(maxIterations);
     optimizationParameters->setP(p);
@@ -438,37 +432,44 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     optimizationParameters->setResolutionFactor(resolutionFactor);
 
     // run super-resolution algorithm
-    SuperResolution * superResolution = new SuperResolution(optimizationParameters);
+    SuperResolution * superResolution = new SuperResolution(optimizationParameters, hiResColor);
 
-    superResolution->setIterationCallback([this](Mat1f intermediateResult) {
-        if (this->showIterationResults) {
-            Mat1b bResult;
-            intermediateResult.convertTo(bResult, CV_8UC1);
-            cvtColor(bResult, this->currentResultImage, CV_GRAY2BGR);
-            this->displayImage(this->currentResultImage);
-        }
-    });
+//    superResolution->setIterationCallback([this](Mat1f intermediateResult) {
+//        if (this->showIterationResults) {
+//            Mat1b bResult;
+//            intermediateResult.convertTo(bResult, CV_8UC1);
+//            cvtColor(bResult, this->currentResultImage, CV_GRAY2BGR);
+//            this->displayImage(this->currentResultImage);
+//        }
+//    });
 
-    Mat1f hrImage = superResolution->compute();
+    Mat3f hrImage = superResolution->compute();
+
+    // convert to byte representation
+    Mat3b bResult;
+    hrImage.convertTo(bResult, CV_8UC3);
+
+    // convert from rgb to bgr
+    cvtColor(bResult, currentResultImage, CV_RGB2BGR);
 
     // only when image has 3 channels
     //TODO überprüfen auf gray image (gleiche werte der Channel)
-    if (sourceImages[0].channels() == 3){
-        if (hiResColor) {
-            currentResultImage = superResolution->extractColorInformation();
-        } else {
-            // convert result to displayable format
-            Mat1b bResult;
-            hrImage.convertTo(bResult, CV_8UC1);
-            cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
-        }
-    } else {
-        string warningTitle = "too few channels";
-        string warningMessage = "3 channels are necessary for color image.";
-        MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
-        (void)dialog; // silence unused variable warning
-        return;
-    }
+//    if (sourceImages[0].channels() == 3){
+//        if (hiResColor) {
+//            currentResultImage = superResolution->extractColorInformation();
+//        } else {
+//            // convert result to displayable format
+//            Mat1b bResult;
+//            hrImage.convertTo(bResult, CV_8UC1);
+//            cvtColor(bResult, currentResultImage, CV_GRAY2BGR);
+//        }
+//    } else {
+//        string warningTitle = "too few channels";
+//        string warningMessage = "3 channels are necessary for color image.";
+//        MessageDialog * dialog = new MessageDialog(this, MessageDialog::Type::Warning, warningTitle, warningMessage);
+//        (void)dialog; // silence unused variable warning
+//        return;
+//    }
 
     displayImage(currentResultImage);
 
