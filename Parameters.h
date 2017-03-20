@@ -29,11 +29,8 @@ typedef unsigned int uint;
 // minimum value for all float parameters
 #define EPS 0.000001f
 
-
 class Parameters {
-
 protected:
-
     // low resolution images (RGB, normalized)
     std::vector<cv::Mat3f> lowResolutionImages;
 
@@ -51,26 +48,20 @@ protected:
     // TODO: what is the ref image?
 //    cv::Mat refImage;
 
-public:
-
     // default constructor
-    Parameters(std::vector<cv::Mat3f> _lowResolutionImages) {
+public:
+    void createParameters(uint resolutionFactor, float alpha, float beta, float lambda, int p, uint maxIterations, uint padding, std::vector<cv::Mat3f> _lowResolutionImages) {
+        this->resolutionFactor = resolutionFactor;
+        this->alpha = alpha;
+        this->beta = beta;
+        this->lambda = lambda;
+        this->p = p;
+        this->maxIterations = maxIterations;
+        this->padding = padding;
 
         setLowResolutionImages(_lowResolutionImages);
-
-        // set default parameters
-
-        resolutionFactor = DEFAULT_RES_FACTOR;
-
         pointSpreadFunction = new GaussianPointSpreadFunction(3, 1.0f);
         pointSpreadFunction->createKernel();
-
-        alpha = DEFAULT_ALPHA;
-        beta = DEFAULT_BETA;
-        lambda = DEFAULT_LAMBDA;
-        p = DEFAULT_P;
-        maxIterations = DEFAULT_ITERATIONS;
-        padding = DEFAULT_PADDING;
 //        refImage = referenceImage;
     }
 
@@ -82,6 +73,7 @@ public:
     void setLowResolutionImages(const std::vector<cv::Mat3f> &lowResolutionImages) {
         Parameters::lowResolutionImages = lowResolutionImages;
         assert(lowResolutionImages.size() > 0);
+        assert(resolutionFactor > 0);
         lowResSize = lowResolutionImages[0].size();
         highResSize = cv::Size(lowResSize.width * resolutionFactor + 1, lowResSize.height * resolutionFactor + 1);
     }
@@ -125,7 +117,19 @@ public:
     uint getPadding() const {
         return padding;
     }
+};
 
+class ParameterFactory {
+private:
+    uint resolutionFactor = DEFAULT_RES_FACTOR;     // resolution improvement factor
+    float alpha = DEFAULT_ALPHA;
+    float beta = DEFAULT_BETA;
+    float lambda = DEFAULT_LAMBDA;
+    int p = DEFAULT_P;                      // gradient regularization radius
+    uint maxIterations = DEFAULT_ITERATIONS;
+    uint padding = DEFAULT_PADDING; // crop lr images by padding to avoid black borders due to offsets
+
+public:
     void setResolutionFactor(uint _resolutionFactor){
         if (_resolutionFactor == 0) {
             resolutionFactor = DEFAULT_RES_FACTOR;
@@ -184,6 +188,11 @@ public:
         padding = _padding;
     }
 
+    Parameters* build(std::vector<cv::Mat3f> _lowResolutionImages) {
+        Parameters* params = new Parameters();
+        params->createParameters(resolutionFactor, alpha, beta, lambda, p, maxIterations, padding, _lowResolutionImages);
+        return params;
+    }
 };
 
 #endif //SUPER_RES_PARAMETERS_H

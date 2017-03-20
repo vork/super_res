@@ -421,15 +421,18 @@ void SuperResolutionApplication::runOptimization(uint maxIterations, int p, uint
     }
 
     // create default parameter set
-    optimizationParameters = new Parameters(rgbImages);
+    ParameterFactory factory;
 
-    optimizationParameters->setMaxIterations(maxIterations);
-    optimizationParameters->setP(p);
-    optimizationParameters->setPadding(padding);
-    optimizationParameters->setAlpha(alpha);
-    optimizationParameters->setBeta(beta);
-    optimizationParameters->setLambda(lambda);
-    optimizationParameters->setResolutionFactor(resolutionFactor);
+    factory.setMaxIterations(maxIterations);
+    factory.setP(p);
+    factory.setPadding(padding);
+    factory.setAlpha(alpha);
+    factory.setBeta(beta);
+    factory.setLambda(lambda);
+    factory.setResolutionFactor(resolutionFactor);
+
+
+    optimizationParameters = factory.build(rgbImages);
 
     // run super-resolution algorithm
     SuperResolution * superResolution = new SuperResolution(optimizationParameters, hiResColor);
