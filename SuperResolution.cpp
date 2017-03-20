@@ -17,7 +17,7 @@ SuperResolution::SuperResolution(Parameters *parameters, bool _computeColoredRes
     this->parameters = parameters;
 }
 
-cv::Mat1f SuperResolution::gradientBackProject() {
+cv::Mat1f SuperResolution::gradientBackProject(Mat1f grayImage) {
 
     // back projected matrix
     Mat1f back;
@@ -31,7 +31,7 @@ cv::Mat1f SuperResolution::gradientBackProject() {
     const double delta = 0.0; // OpenCV default
     const int borderType = BORDER_REFLECT;
     Mat1f kernel = psf->getKernel();
-    filter2D(hrImage, back, ddepth, kernel, anchorPoint, delta, borderType);
+    filter2D(grayImage, back, ddepth, kernel, anchorPoint, delta, borderType);
 
     // compute difference between blurred current solution and initial solution
      back = back - initialSolution;
@@ -58,7 +58,7 @@ cv::Mat1f SuperResolution::gradientBackProject() {
     return unfiltered;
 }
 
-cv::Mat1f SuperResolution::gradientRegulization() {
+cv::Mat1f SuperResolution::gradientRegulization(Mat1f grayImage) {
 
     // get window radius
     const int p = parameters->getP();
@@ -71,7 +71,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
 
     // create mirror padded version of current solution
     Mat1f padded;
-    copyMakeBorder(hrImage, padded, p, p, p, p, BORDER_REFLECT);
+    copyMakeBorder(grayImage, padded, p, p, p, p, BORDER_REFLECT);
 
     Mat1f shifted;
 
@@ -86,7 +86,7 @@ cv::Mat1f SuperResolution::gradientRegulization() {
 
             Mat1f shift = padded(roi);
 
-            Mat1f diff = hrImage - shift;
+            Mat1f diff = grayImage - shift;
 
             // compute sign
             Mat1f sign(parameters->getHighResSize());
@@ -138,8 +138,23 @@ Mat3f SuperResolution::compute() {
 
     // compute offsets as negative image flow
     vector<Point2f> offsets;
+
+    int i = 0;
     for (Point2f imageFlow : imageFlows) {
-        offsets.push_back((-1) * imageFlow);
+        Vec2f offset = (-1) * imageFlow;
+
+        cout << "offset for image " << i << ": " << offset;
+
+        // check for nan values
+        if ((offset[0] != offset[0]) || (offset[1] != offset[1])) {
+            cout << " (nan)";
+            offset = Vec2f(0, 0);
+        }
+
+        cout << endl;
+
+        offsets.push_back(offset);
+        i++;
     }
 
     timer.printTimeAndReset("offset computation");
@@ -147,16 +162,17 @@ Mat3f SuperResolution::compute() {
     // compute median estimation
     MedianEstimationResult medianEstimationResult = medianEstimation(grayImageSet, offsets);
 
-    Mat3f hrGray = medianEstimationResult.medianEstimate;
+    Mat1f medianEstimate = medianEstimationResult.medianEstimate;
     sqrtContributions = medianEstimationResult.sqrtContributions;
 
     timer.printTimeAndReset("median estimation");
 
     // DEBUG: write median estimation image
-    imwrite("median.png", hrImage);
+    imwrite("median.png", medianEstimate);
 
-    hrGray = computeWithInitialSolutionAndSqrtContributions(hrImage, sqrtContributions);
+    Mat1f hrGray = computeWithInitialSolutionAndSqrtContributions(medianEstimate, sqrtContributions);
 
+    Mat3f hrImage;
     if (computeColoredResult) {
         unique_ptr<ImageSet> crImageSet(new SimpleImageSet(crImages));
         MedianEstimationResult crMEResult = medianEstimation(crImageSet.get(), offsets);
@@ -202,14 +218,14 @@ Mat1f SuperResolution::computeWithInitialSolutionAndSqrtContributions(Mat1f _ini
     for (unsigned int iteration = 0; iteration < parameters->getMaxIterations(); iteration++) {
 
         // gradient back projection
-        Mat1f backProjected = gradientBackProject();
+        Mat1f backProjected = gradientBackProject(hrGray);
         iterationTimer.printTimeAndReset("gradient back project");
 
-        Mat1f regularized = gradientRegulization();
+        Mat1f regularized = gradientRegulization(hrGray);
         iterationTimer.printTimeAndReset("regulization");
 
         // compute gradient
-         gradient = backProjected + (lambda * regularized);
+        gradient = backProjected + (lambda * regularized);
 
         // subtract gradient
         hrGray = hrGray - (beta * gradient);

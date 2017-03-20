@@ -117,6 +117,22 @@ public:
     uint getPadding() const {
         return padding;
     }
+
+    std::string str() {
+
+        std::stringstream stream;
+
+        stream << "resolution factor: " << resolutionFactor << "\n";
+        stream << "alpha: " << alpha << "\n";
+        stream << "beta: " << beta << "\n";
+        stream << "lambda: " << lambda << "\n";
+        stream << "p: " << p << "\n";
+        stream << "max iterations: " << maxIterations << "\n";
+        stream << "padding: " << padding << "\n";
+        stream << "num images: " << lowResolutionImages.size() << "\n";
+
+        return stream.str();
+    }
 };
 
 class ParameterFactory {

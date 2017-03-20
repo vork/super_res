@@ -43,11 +43,8 @@ protected:
     // initial estimated solution
     cv::Mat1f initialSolution;
 
-    // current high resolution image
-    cv::Mat3f hrImage;
-
-    cv::Mat1f gradientBackProject();
-    cv::Mat1f gradientRegulization();
+    cv::Mat1f gradientBackProject(cv::Mat1f grayImage);
+    cv::Mat1f gradientRegulization(cv::Mat1f grayImage);
 
     // create timer for runtime analysis
     Timer timer;

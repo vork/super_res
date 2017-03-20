@@ -1,6 +1,12 @@
 #include <iostream>
 
 #include "SuperResolutionApplication.h"
+#include "ImageLoader.h"
+#include "SuperResolution.h"
+
+
+// use for debugging without the gui (easier to debug)
+#define DEBUG_WITHOUT_GUI true
 
 
 using namespace std;
@@ -15,7 +21,43 @@ Vector2i getScreenSize() {
     return screenSize;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+#if DEBUG_WITHOUT_GUI
+
+    if (argc != 2) {
+        cout << "one argument (image directory) needed when running in debug mode without GUI." << endl;
+    }
+    else {
+        string imageDir = argv[1];
+
+        // load images
+        unique_ptr<ImageLoader> imageLoader(new ImageLoader());
+        vector<Mat> _images = imageLoader->loadImages(imageDir);
+
+        // convert to explicit Mat3f
+        vector<Mat3f> images;
+        for (auto _image : _images) {
+            Mat3f image = _image;
+            images.push_back(image);
+        }
+        printf("%i images loaded.\n", images.size());
+
+        unique_ptr<ParameterFactory> parameterFactory(new ParameterFactory());
+
+        unique_ptr<Parameters> parameters(parameterFactory->build(images));
+
+        cout << parameters->str() << endl;
+
+        const bool colored = false;
+        unique_ptr<SuperResolution> superResolution(new SuperResolution(parameters.get(), colored));
+
+        Mat3f result = superResolution->compute();
+        imwrite("result.jpg", result);
+
+    }
+
+#else
 
     try {
         nanogui::init();
@@ -62,6 +104,8 @@ int main() {
 #endif
         return -1;
     }
+
+#endif
 
     return 0;
 }
