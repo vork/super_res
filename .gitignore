@@ -13,6 +13,7 @@
 .idea/sqlDataSources.xml
 .idea/dynamic.xml
 .idea/uiDesigner.xml
+.idea/super_res.iml
 
 # Gradle:
 .idea/gradle.xml
@@ -50,3 +51,4 @@ fabric.properties
 #images
 hr.png
 median.png
+result.jpg
