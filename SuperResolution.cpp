@@ -125,7 +125,7 @@ Mat3f SuperResolution::compute() {
     for (Mat3f rgbImage : parameters->getLowResolutionImages()) {
         Mat3f yCrCbImage = convertToYCrCb(rgbImage);
         vector<Mat1f> channels(3);
-        split(rgbImage, channels);
+        split(yCrCbImage, channels);
         grayImages.push_back(channels[0]);
         crImages.push_back(channels[1]);
         cbImages.push_back(channels[2]);
